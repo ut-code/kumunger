@@ -5,9 +5,14 @@ import { v4 as uuidv4 } from 'uuid';
 interface SubmissionStore {
   submissions: ShiftSubmission[];
   
-  submitShift: (submission: Omit<ShiftSubmission, 'id' | 'submittedAt' | 'updatedAt'>) => ShiftSubmission;
+  // API operations
+  fetchSubmissions: () => Promise<void>;
+  fetchSubmissionsByForm: (formId: string) => Promise<void>;
+  submitShift: (submission: Omit<ShiftSubmission, 'id' | 'submittedAt' | 'updatedAt'>) => Promise<ShiftSubmission>;
   updateSubmission: (id: string, updates: Partial<ShiftSubmission>) => void;
-  deleteSubmission: (id: string) => void;
+  deleteSubmission: (id: string) => Promise<void>;
+  
+  // Get operations (local)
   getSubmissionsByForm: (formId: string) => ShiftSubmission[];
   getSubmissionByStaff: (formId: string, staffName: string) => ShiftSubmission | undefined;
   
@@ -18,43 +23,58 @@ interface SubmissionStore {
   getSlotAvailability: (formId: string, slotId: string) => ShiftSubmission[];
 }
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 export const useSubmissionStore = create<SubmissionStore>((set, get) => ({
   submissions: [],
-  
-  submitShift: (submissionData) => {
-    const existingSubmission = get().getSubmissionByStaff(
-      submissionData.formId,
-      submissionData.staffName
-    );
-    
-    if (existingSubmission) {
-      const updated: ShiftSubmission = {
-        ...existingSubmission,
-        ...submissionData,
-        updatedAt: new Date(),
-      };
-      
-      set((state) => ({
-        submissions: state.submissions.map((sub) =>
-          sub.id === existingSubmission.id ? updated : sub
-        ),
-      }));
-      
-      return updated;
+
+  fetchSubmissions: async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/submissions`);
+      if (!response.ok) throw new Error('Failed to fetch submissions');
+      const submissions = await response.json();
+      set({ submissions });
+    } catch (error) {
+      console.error('Error fetching submissions:', error);
     }
-    
-    const newSubmission: ShiftSubmission = {
-      ...submissionData,
-      id: uuidv4(),
-      submittedAt: new Date(),
-      updatedAt: new Date(),
-    };
-    
-    set((state) => ({
-      submissions: [...state.submissions, newSubmission],
-    }));
-    
-    return newSubmission;
+  },
+
+  fetchSubmissionsByForm: async (formId) => {
+    try {
+      const response = await fetch(`${API_URL}/api/forms/${formId}/submissions`);
+      if (!response.ok) throw new Error('Failed to fetch submissions');
+      const submissions = await response.json();
+      
+      set((state) => {
+        // Remove old submissions for this form and add new ones
+        const otherSubmissions = state.submissions.filter(s => s.formId !== formId);
+        return { submissions: [...otherSubmissions, ...submissions] };
+      });
+    } catch (error) {
+      console.error('Error fetching submissions by form:', error);
+    }
+  },
+  
+  submitShift: async (submissionData) => {
+    try {
+      const response = await fetch(`${API_URL}/api/submissions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submissionData),
+      });
+
+      if (!response.ok) throw new Error('Failed to submit shift');
+      const createdSubmission = await response.json();
+
+      set((state) => ({
+        submissions: [...state.submissions, createdSubmission],
+      }));
+
+      return createdSubmission;
+    } catch (error) {
+      console.error('Error submitting shift:', error);
+      throw error;
+    }
   },
   
   updateSubmission: (id, updates) => {
@@ -67,10 +87,21 @@ export const useSubmissionStore = create<SubmissionStore>((set, get) => ({
     }));
   },
   
-  deleteSubmission: (id) => {
-    set((state) => ({
-      submissions: state.submissions.filter((sub) => sub.id !== id),
-    }));
+  deleteSubmission: async (id) => {
+    try {
+      const response = await fetch(`${API_URL}/api/submissions/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete submission');
+
+      set((state) => ({
+        submissions: state.submissions.filter((sub) => sub.id !== id),
+      }));
+    } catch (error) {
+      console.error('Error deleting submission:', error);
+      throw error;
+    }
   },
   
   getSubmissionsByForm: (formId) => {

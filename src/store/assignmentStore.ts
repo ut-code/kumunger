@@ -19,6 +19,7 @@ interface AssignmentStore {
   updateStaffAssignment: (assignmentId: string, slotId: string, staffId: string, updates: Partial<StaffAssignment>) => void;
   
   confirmAssignment: (assignmentId: string) => void;
+  unpublishAssignment: (assignmentId: string) => void;
   publishAssignment: (assignmentId: string) => void;
   
   addRule: (rule: Omit<ShiftRule, 'id'>) => void;
@@ -179,6 +180,21 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
           ? {
               ...assignment,
               status: 'confirmed',
+              updatedAt: new Date(),
+            }
+          : assignment
+      ),
+    }));
+  },
+  
+  unpublishAssignment: (assignmentId) => {
+    set((state) => ({
+      assignments: state.assignments.map((assignment) =>
+        assignment.id === assignmentId
+          ? {
+              ...assignment,
+              status: 'draft',
+              publishedAt: undefined,
               updatedAt: new Date(),
             }
           : assignment
