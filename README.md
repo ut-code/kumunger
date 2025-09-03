@@ -1,69 +1,158 @@
-# React + TypeScript + Vite
+# 組むんジャー (Kumunja) - シフト管理アプリケーション
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+シフト希望を簡単に集め、調整し、共有までをワンストップで行うWebアプリケーション。
+Googleフォームよりも直感的で、シフト作成の特有の要件に対応できます。**ログイン不要**で回答できる手軽さが最大の特徴です。
 
-Currently, two official plugins are available:
+## 🌟 主な機能
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 管理者向け機能
+- **シフト募集フォーム作成**: 日付範囲、時間帯、役割設定、追加質問の設定
+- **希望回答の管理**: 提出された希望の一覧表示と集計
+- **自動シフト生成**: ルールに基づいた自動調整機能
+- **手動調整**: ドラッグ&ドロップでの直感的なシフト調整
+- **共有機能**: URL共有とQRコード生成
+- **通知機能**: メールやLINEでの確定通知
 
-## Expanding the ESLint configuration
+### スタッフ向け機能
+- **ログイン不要**: URLアクセスだけで希望提出可能
+- **直感的な操作**: 出勤可能な時間帯を簡単選択
+- **役割希望**: 各時間帯での希望役割を指定
+- **確定シフト閲覧**: 公開されたシフトをいつでも確認
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🚀 セットアップ
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 前提条件
+- Node.js (v18以上)
+- npm または yarn
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+### インストール
+```bash
+# リポジトリをクローン
+git clone <repository-url>
+cd event-shift
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# 依存関係をインストール
+npm install
+
+# 開発サーバーを起動
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+アプリケーションが `http://localhost:5173/` で起動します。
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### ビルド
+```bash
+# 本番用ビルド
+npm run build
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# プレビュー
+npm run preview
 ```
+
+## 📖 使い方
+
+### 1. 管理者の操作
+
+#### フォーム作成
+1. ダッシュボードで「新規作成」をクリック
+2. 基本情報（タイトル、説明、日付範囲）を入力
+3. 時間帯を設定（手動追加または自動生成）
+4. 必要に応じて役割と追加質問を設定
+5. 「保存」でフォーム完成
+
+#### 希望の収集
+1. 作成したフォームの「共有」ボタンをクリック
+2. URLをコピーしてスタッフに送信
+3. または「QRコード」を生成してスマートフォンでスキャン
+4. スタッフが希望を提出すると自動的に集計
+
+#### シフト調整
+1. フォーム詳細画面で「シフト調整」を選択
+2. 「自動生成」で初期案を作成
+3. 手動で微調整（将来の機能）
+4. 「確定」→「公開」でスタッフに通知
+
+### 2. スタッフの操作
+
+#### 希望提出
+1. 管理者から送られたURLにアクセス
+2. 基本情報（名前、連絡先）を入力
+3. 出勤可能な時間帯をチェック
+4. 各時間帯で希望する役割を選択（任意）
+5. 「送信する」で完了
+
+#### 確定シフト確認
+1. 管理者から通知されたURLにアクセス
+2. 自分のシフトを確認
+
+## 🛠 技術スタック
+
+- **フロントエンド**: React 19 + TypeScript
+- **状態管理**: Zustand
+- **ルーティング**: React Router v6
+- **スタイリング**: Tailwind CSS
+- **日付処理**: date-fns
+- **アイコン**: Lucide React
+- **QRコード生成**: qrcode
+- **ドラッグ&ドロップ**: @dnd-kit (将来実装予定)
+
+## 🎯 シフト組みルール
+
+以下のルールを考慮したシフト自動生成機能を搭載（一部開発中）：
+
+- **組み合わせNG設定**: 特定のスタッフ同士が同じシフトに入らない
+- **必須人員の配置**: 責任者や上級生を必ず配置
+- **スキルレベル考慮**: 新人とベテランのバランス調整
+- **ポジション希望**: スタッフの役職希望を反映
+- **時間帯ごとの必要人数**: 各時間帯の最適人数を維持
+
+## 📱 レスポンシブ対応
+
+- デスクトップ、タブレット、スマートフォンに対応
+- モバイルファーストデザイン
+- タッチ操作に最適化
+
+## 🔧 開発者向け情報
+
+### プロジェクト構造
+```
+src/
+├── components/     # 再利用可能なコンポーネント
+├── pages/         # ページコンポーネント
+├── store/         # Zustand状態管理
+├── types/         # TypeScript型定義
+└── App.tsx        # メインアプリケーション
+```
+
+### 主要なコンポーネント
+- `Layout`: 共通レイアウト（サイドバー、ナビゲーション）
+- `Dashboard`: 管理者ダッシュボード
+- `FormBuilder`: フォーム作成・編集
+- `SubmitForm`: スタッフ用希望提出フォーム
+- `ShiftAssignment`: シフト調整画面
+
+### 状態管理
+- `formStore`: フォーム作成・管理
+- `submissionStore`: 希望提出・回答管理
+- `assignmentStore`: シフト調整・確定
+
+## 🤝 今後の機能拡張予定
+
+- [ ] ドラッグ&ドロップによるシフト調整
+- [ ] メール・LINE通知機能
+- [ ] CSVエクスポート
+- [ ] スタッフ管理機能
+- [ ] シフトテンプレート機能の拡充
+- [ ] 統計・分析機能
+
+## 📄 ライセンス
+
+MIT License
+
+## 👥 コントリビューション
+
+プルリクエストやイシューの報告を歓迎します。
+
+---
+
+**組むんジャー** - シフト管理をもっと簡単に、もっと効率的に 🎯
