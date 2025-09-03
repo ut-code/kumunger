@@ -7,8 +7,8 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
-    allowedHosts: process.env.RENDER_EXTERNAL_HOSTNAME
-      ? [process.env.RENDER_EXTERNAL_HOSTNAME]
+    allowedHosts: process.env.RENDER
+      ? [".onrender.com"]
       : [],
   }
 })
