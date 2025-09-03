@@ -24,6 +24,7 @@ Googleフォームよりも直感的で、シフト作成の特有の要件に�
 ### 前提条件
 - Node.js (v18以上)
 - npm または yarn
+- PostgreSQL (データベース)
 
 ### インストール
 ```bash
@@ -34,11 +35,26 @@ cd event-shift
 # 依存関係をインストール
 npm install
 
+# データベースのセットアップ（必要に応じて.envファイルを作成）
+npx prisma generate
+npx prisma db push
+
 # 開発サーバーを起動
-npm run dev
+npm run dev:all    # フロントエンド+バックエンドを同時起動
 ```
 
-アプリケーションが `http://localhost:5173/` で起動します。
+アプリケーションが以下で起動します：
+- フロントエンド: `http://localhost:5173/`
+- バックエンドAPI: `http://localhost:3000/`
+
+### 個別起動
+```bash
+# バックエンドのみ起動（APIサーバー）
+npm run dev:server
+
+# フロントエンドのみ起動
+npm run dev
+```
 
 ### ビルド
 ```bash
