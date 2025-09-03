@@ -5,14 +5,14 @@ import { useFormStore } from '../store/formStore';
 import { useSubmissionStore } from '../store/submissionStore';
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import type { AvailableSlot } from '../types';
+import type { AvailableSlot, ShiftForm } from '../types';
 
 export function SubmitForm() {
   const { formId } = useParams<{ formId: string }>();
   const { getForm } = useFormStore();
   const { submitShift } = useSubmissionStore();
   
-  const [form, setForm] = useState(formId ? getForm(formId) : null);
+  const [form, setForm] = useState<ShiftForm | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     staffName: '',
@@ -23,23 +23,26 @@ export function SubmitForm() {
   const [availability, setAvailability] = useState<Record<string, AvailableSlot>>({});
 
   useEffect(() => {
-    if (formId) {
-      const formData = getForm(formId);
-      setForm(formData);
-      
-      if (formData) {
-        const initialAvailability: Record<string, AvailableSlot> = {};
-        formData.timeSlots.forEach(slot => {
-          initialAvailability[slot.id] = {
-            slotId: slot.id,
-            isAvailable: false,
-            preferredRole: '',
-            notes: '',
-          };
-        });
-        setAvailability(initialAvailability);
+    const loadForm = async () => {
+      if (formId) {
+        const formData = await getForm(formId);
+        setForm(formData);
+        
+        if (formData) {
+          const initialAvailability: Record<string, AvailableSlot> = {};
+          formData.timeSlots.forEach(slot => {
+            initialAvailability[slot.id] = {
+              slotId: slot.id,
+              isAvailable: false,
+              preferredRole: '',
+              notes: '',
+            };
+          });
+          setAvailability(initialAvailability);
+        }
       }
-    }
+    };
+    loadForm();
   }, [formId, getForm]);
 
   if (!form) {
@@ -64,21 +67,26 @@ export function SubmitForm() {
     );
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const availableSlots = Object.values(availability);
     
-    submitShift({
-      formId: form.id,
-      staffName: formData.staffName,
-      email: formData.email,
-      phoneNumber: formData.phoneNumber,
-      availableSlots,
-      answers: formData.answers,
-    });
-    
-    setSubmitted(true);
+    try {
+      await submitShift({
+        formId: form.id,
+        staffName: formData.staffName,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        availableSlots,
+        answers: formData.answers,
+      });
+      
+      setSubmitted(true);
+    } catch (error) {
+      console.error('Failed to submit:', error);
+      alert('送信に失敗しました。もう一度お試しください。');
+    }
   };
 
   const toggleAvailability = (slotId: string) => {
@@ -139,8 +147,8 @@ export function SubmitForm() {
             )}
             <div className="mt-4 flex items-center text-sm text-gray-500">
               <Calendar className="w-4 h-4 mr-1" />
-              {format(form.startDate, 'yyyy年M月d日', { locale: ja })} - 
-              {format(form.endDate, 'yyyy年M月d日', { locale: ja })}
+              {format(new Date(form.startDate), 'yyyy年M月d日', { locale: ja })} - 
+              {format(new Date(form.endDate), 'yyyy年M月d日', { locale: ja })}
             </div>
           </div>
 
@@ -212,7 +220,7 @@ export function SubmitForm() {
                         />
                         <label htmlFor={slot.id} className="ml-3 cursor-pointer">
                           <div className="font-medium text-gray-900">
-                            {format(slot.date, 'M月d日(E)', { locale: ja })}
+                            {format(new Date(slot.date), 'M月d日(E)', { locale: ja })}
                           </div>
                           <div className="text-sm text-gray-600">
                             <Clock className="inline w-3 h-3 mr-1" />

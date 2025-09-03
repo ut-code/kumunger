@@ -1,16 +1,33 @@
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useFormStore } from '../store/formStore';
 import { useSubmissionStore } from '../store/submissionStore';
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
+import type { ShiftForm } from '../types';
 
 export function Submissions() {
   const { id } = useParams<{ id: string }>();
   const { getForm } = useFormStore();
-  const { getSubmissionsByForm } = useSubmissionStore();
+  const { getSubmissionsByForm, fetchSubmissionsByForm } = useSubmissionStore();
   
-  const form = id ? getForm(id) : null;
+  const [form, setForm] = useState<ShiftForm | null>(null);
+
+  useEffect(() => {
+    const loadFormAndSubmissions = async () => {
+      if (id) {
+        const formData = await getForm(id);
+        setForm(formData || null);
+        
+        if (formData) {
+          await fetchSubmissionsByForm(formData.id);
+        }
+      }
+    };
+    loadFormAndSubmissions();
+  }, [id, getForm, fetchSubmissionsByForm]);
+
   const submissions = form ? getSubmissionsByForm(form.id) : [];
 
   if (!form) {
