@@ -104,7 +104,9 @@ npm run preview
 ## 🛠 技術スタック
 
 - **フロントエンド**: React 19 + TypeScript
-- **状態管理**: Zustand
+- **バックエンド**: Express.js + Node.js
+- **データベース**: PostgreSQL + Prisma ORM
+- **状態管理**: Zustand (クライアントサイド)
 - **ルーティング**: React Router v6
 - **スタイリング**: Tailwind CSS
 - **日付処理**: date-fns
