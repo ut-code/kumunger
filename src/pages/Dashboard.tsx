@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Plus, 
@@ -20,10 +20,15 @@ import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
 
 export function Dashboard() {
-  const { forms, deleteForm, generateShareUrl, generateQRCode } = useFormStore();
+  const { forms, fetchForms, deleteForm, generateShareUrl, generateQRCode } = useFormStore();
   const { submissions } = useSubmissionStore();
   const { assignments } = useAssignmentStore();
   const [showQRCode, setShowQRCode] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    fetchForms();
+  }, [fetchForms]);
 
   const getFormStats = (formId: string) => {
     const formSubmissions = submissions.filter(s => s.formId === formId);
@@ -36,7 +41,7 @@ export function Dashboard() {
   };
 
   const handleShare = async (formId: string) => {
-    const url = generateShareUrl(formId);
+    const url = await generateShareUrl(formId);
     if (navigator.share) {
       await navigator.share({
         title: 'シフト希望フォーム',
@@ -130,7 +135,7 @@ export function Dashboard() {
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center text-sm text-gray-500">
                     <Calendar className="h-4 w-4 mr-2" />
-                    {format(form.startDate, 'M月d日', { locale: ja })} - {format(form.endDate, 'M月d日', { locale: ja })}
+                    {format(new Date(form.startDate), 'M月d日', { locale: ja })} - {format(new Date(form.endDate), 'M月d日', { locale: ja })}
                   </div>
                   <div className="flex items-center text-sm text-gray-500">
                     <Users className="h-4 w-4 mr-2" />

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { ShiftForm } from '../types';
 import { useParams, Link } from 'react-router-dom';
 import { 
   Edit, 
@@ -19,19 +20,27 @@ import { ja } from 'date-fns/locale';
 export function FormDetail() {
   const { id } = useParams<{ id: string }>();
   const { getForm, generateShareUrl, generateQRCode } = useFormStore();
-  const { getSubmissionsByForm } = useSubmissionStore();
+  const { getSubmissionsByForm, fetchSubmissionsByForm } = useSubmissionStore();
   const { getAssignmentByForm } = useAssignmentStore();
   
-  const [form, setForm] = useState(id ? getForm(id) : null);
+  const [form, setForm] = useState<ShiftForm | null>(null);
   const [showQRCode, setShowQRCode] = useState(false);
   const [qrCodeUrl, setQRCodeUrl] = useState('');
 
   useEffect(() => {
-    if (id) {
-      const formData = getForm(id);
-      setForm(formData);
-    }
-  }, [id, getForm]);
+    const loadFormAndSubmissions = async () => {
+      if (id) {
+        const formData = await getForm(id);
+        setForm(formData || null);
+        
+        if (formData) {
+          // Fetch submissions for this form
+          await fetchSubmissionsByForm(formData.id);
+        }
+      }
+    };
+    loadFormAndSubmissions();
+  }, [id, getForm, fetchSubmissionsByForm]);
 
   if (!form) {
     return (
@@ -50,16 +59,13 @@ export function FormDetail() {
   const assignment = getAssignmentByForm(form.id);
 
   const handleShare = async () => {
-    const url = generateShareUrl(form.id);
-    if (navigator.share) {
-      await navigator.share({
-        title: form.title,
-        text: 'シフト希望を提出してください',
-        url,
-      });
-    } else {
+    const url = await generateShareUrl(form.id);
+    try {
       await navigator.clipboard.writeText(url);
       alert('URLをコピーしました');
+    } catch (error) {
+      console.error('Failed to copy URL:', error);
+      alert('URLのコピーに失敗しました');
     }
   };
 
@@ -92,8 +98,8 @@ export function FormDetail() {
               <div className="mt-4 flex items-center space-x-6 text-sm text-gray-500">
                 <div className="flex items-center">
                   <Calendar className="w-4 h-4 mr-1" />
-                  {format(form.startDate, 'yyyy年M月d日', { locale: ja })} - 
-                  {format(form.endDate, 'yyyy年M月d日', { locale: ja })}
+                  {format(new Date(form.startDate), 'yyyy年M月d日', { locale: ja })} - 
+                  {format(new Date(form.endDate), 'yyyy年M月d日', { locale: ja })}
                 </div>
                 <div className="flex items-center">
                   <Users className="w-4 h-4 mr-1" />
@@ -212,7 +218,7 @@ export function FormDetail() {
                     return (
                       <tr key={slot.id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {format(slot.date, 'M月d日(E)', { locale: ja })}
+                          {format(new Date(slot.date), 'M月d日(E)', { locale: ja })}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {slot.startTime} - {slot.endTime}

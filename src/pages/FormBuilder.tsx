@@ -33,20 +33,23 @@ export function FormBuilder() {
   const [roles, setRoles] = useState<Omit<Role, 'id'>[]>([]);
 
   useEffect(() => {
-    if (id) {
-      const existingForm = getForm(id);
-      if (existingForm) {
-        setFormData({
-          title: existingForm.title,
-          description: existingForm.description || '',
-          startDate: format(existingForm.startDate, 'yyyy-MM-dd'),
-          endDate: format(existingForm.endDate, 'yyyy-MM-dd'),
-        });
-        setTimeSlots(existingForm.timeSlots);
-        setQuestions(existingForm.additionalQuestions);
-        setRoles(existingForm.requiredRoles);
+    const loadForm = async () => {
+      if (id) {
+        const existingForm = await getForm(id);
+        if (existingForm) {
+          setFormData({
+            title: existingForm.title,
+            description: existingForm.description || '',
+            startDate: format(new Date(existingForm.startDate), 'yyyy-MM-dd'),
+            endDate: format(new Date(existingForm.endDate), 'yyyy-MM-dd'),
+          });
+          setTimeSlots(existingForm.timeSlots);
+          setQuestions(existingForm.additionalQuestions);
+          setRoles(existingForm.requiredRoles);
+        }
       }
-    }
+    };
+    loadForm();
   }, [id, getForm]);
 
   const steps = [
@@ -115,26 +118,34 @@ export function FormBuilder() {
     setTimeSlots(slots);
   };
 
-  const handleSave = () => {
-    if (id) {
-      updateForm(id, {
-        ...formData,
-        startDate: new Date(formData.startDate),
-        endDate: new Date(formData.endDate),
-        timeSlots: timeSlots.map(slot => ({ ...slot, id: uuidv4() })),
-        additionalQuestions: questions.map(q => ({ ...q, id: uuidv4() })),
-        requiredRoles: roles.map(r => ({ ...r, id: uuidv4() })),
-      });
-    } else {
-      const newForm = createForm({
-        ...formData,
-        startDate: new Date(formData.startDate),
-        endDate: new Date(formData.endDate),
-        timeSlots: timeSlots.map(slot => ({ ...slot, id: uuidv4() })),
-        additionalQuestions: questions.map(q => ({ ...q, id: uuidv4() })),
-        requiredRoles: roles.map(r => ({ ...r, id: uuidv4() })),
-      });
-      navigate(`/forms/${newForm.id}`);
+  const handleSave = async () => {
+    try {
+      if (id) {
+        await updateForm(id, {
+          ...formData,
+          startDate: new Date(formData.startDate),
+          endDate: new Date(formData.endDate),
+          timeSlots: timeSlots.map(slot => ({ ...slot, id: uuidv4() })),
+          additionalQuestions: questions.map(q => ({ ...q, id: uuidv4() })),
+          requiredRoles: roles.map(r => ({ ...r, id: uuidv4() })),
+        });
+      } else {
+        const newForm = await createForm(formData.title, formData.description);
+        // Add time slots, questions, and roles after creation
+        if (newForm && newForm.id) {
+          await updateForm(newForm.id, {
+            startDate: new Date(formData.startDate),
+            endDate: new Date(formData.endDate),
+            timeSlots: timeSlots.map(slot => ({ ...slot, id: uuidv4() })),
+            additionalQuestions: questions.map(q => ({ ...q, id: uuidv4() })),
+            requiredRoles: roles.map(r => ({ ...r, id: uuidv4() })),
+          });
+        }
+      }
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Failed to save form:', error);
+      alert('フォームの保存に失敗しました。');
     }
   };
 
