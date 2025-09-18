@@ -28,7 +28,7 @@ function App() {
           <Route path="templates" element={<Templates />} />
           <Route path="settings" element={<Settings />} />
           <Route path="signup" element={<Signup />} />
-          <Route path="signin" element={<Signin />} />
+          <Route path="signin" element={<PublicRoute><Signin /></PublicRoute>} />
         </Route>
         <Route path="/submit/:formId" element={<SubmitForm />} />
         <Route path="/shift/:assignmentId" element={<ViewShift />} />

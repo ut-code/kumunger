@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 export function Signin() {
     const navigate = useNavigate();
-    const { authenticated, requestSignin } = useAccountStore();
+    const { requestSignin } = useAccountStore();
     const name = useRef<HTMLInputElement>(null);
     const pass = useRef<HTMLInputElement>(null);
 

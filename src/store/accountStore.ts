@@ -26,10 +26,10 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
     });
     const json = await response.json();
     if (response.ok) {
-      set(() => ({
+      set({
         username: json.username,
-        authenticated: true,
-      }));
+        authenticated: true
+      });
     }
   },
   requestSignin: async (username, password) => {

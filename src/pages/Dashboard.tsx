@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   Plus,
   Calendar,
@@ -13,7 +13,6 @@ import {
   CheckCircle,
   Clock,
 } from 'lucide-react';
-import { useAccountStore } from '../store/accountStore';
 import { useFormStore } from '../store/formStore';
 import { useSubmissionStore } from '../store/submissionStore';
 import { useAssignmentStore } from '../store/assignmentStore';
