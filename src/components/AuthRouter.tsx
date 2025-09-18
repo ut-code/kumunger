@@ -15,7 +15,7 @@ export function PrivateRoute({ children }: { children: ReactElement }) {
 
     return children;
 }
-export function PublicRoute({ children }: { children: ReactElement }) {
+export function AuthRoute({ children }: { children: ReactElement }) {
     const { authenticated } = useAccountStore();
 
     if (authenticated) {

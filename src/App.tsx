@@ -11,7 +11,7 @@ import { Templates } from './pages/Templates';
 import { Settings } from './pages/Settings';
 import { Signin } from './pages/Signin';
 import { Signup } from './pages/Signup';
-import { PrivateRoute, PublicRoute } from './components/AuthRouter';
+import { PrivateRoute, AuthRoute } from './components/AuthRouter';
 
 function App() {
   return (
@@ -20,15 +20,15 @@ function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-          <Route path="forms/new" element={<FormBuilder />} />
-          <Route path="forms/:id" element={<FormDetail />} />
-          <Route path="forms/:id/edit" element={<FormBuilder />} />
-          <Route path="forms/:id/submissions" element={<Submissions />} />
-          <Route path="forms/:id/assignment" element={<ShiftAssignment />} />
-          <Route path="templates" element={<Templates />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="signup" element={<Signup />} />
-          <Route path="signin" element={<PublicRoute><Signin /></PublicRoute>} />
+          <Route path="forms/new" element={<PrivateRoute><FormBuilder /></PrivateRoute>} />
+          <Route path="forms/:id" element={<PrivateRoute><FormDetail /></PrivateRoute>} />
+          <Route path="forms/:id/edit" element={<PrivateRoute><FormBuilder /></PrivateRoute>} />
+          <Route path="forms/:id/submissions" element={<PrivateRoute><Submissions /></PrivateRoute>} />
+          <Route path="forms/:id/assignment" element={<PrivateRoute><ShiftAssignment /></PrivateRoute>} />
+          <Route path="templates" element={<PrivateRoute><Templates /></PrivateRoute>} />
+          <Route path="settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+          <Route path="signup" element={<AuthRoute><Signup /></AuthRoute>} />
+          <Route path="signin" element={<AuthRoute><Signin /></AuthRoute>} />
         </Route>
         <Route path="/submit/:formId" element={<SubmitForm />} />
         <Route path="/shift/:assignmentId" element={<ViewShift />} />
