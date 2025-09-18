@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import type { ShiftSubmission, AvailableSlot } from '../types';
-import { v4 as uuidv4 } from 'uuid';
 
 interface SubmissionStore {
   submissions: ShiftSubmission[];
@@ -23,7 +22,7 @@ interface SubmissionStore {
   getSlotAvailability: (formId: string, slotId: string) => ShiftSubmission[];
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.MODE === 'production' ? '' : 'http://localhost:3001');
 
 export const useSubmissionStore = create<SubmissionStore>((set, get) => ({
   submissions: [],

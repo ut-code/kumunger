@@ -39,6 +39,7 @@ interface FormStore {
   
   // Templates
   createTemplate: (formId: string, name: string, description?: string) => void;
+  createEmptyTemplate: (name: string, description?: string) => void;
   applyTemplate: (formId: string, templateId: string) => void;
   deleteTemplate: (templateId: string) => void;
   
@@ -50,7 +51,7 @@ interface FormStore {
   setCurrentForm: (form: ShiftForm | null) => void;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.MODE === 'production' ? '' : 'http://localhost:3001');
 
 export const useFormStore = create<FormStore>((set, get) => ({
   forms: [],
@@ -346,6 +347,22 @@ export const useFormStore = create<FormStore>((set, get) => ({
       timeSlots: form.timeSlots.map(({ id, date, ...rest }) => rest),
       additionalQuestions: form.additionalQuestions.map(({ id, ...rest }) => rest),
       requiredRoles: form.requiredRoles,
+      createdAt: new Date(),
+    };
+
+    set((state) => ({
+      templates: [...state.templates, template],
+    }));
+  },
+
+  createEmptyTemplate: (name, description) => {
+    const template: Template = {
+      id: uuidv4(),
+      name,
+      description,
+      timeSlots: [],
+      additionalQuestions: [],
+      requiredRoles: [],
       createdAt: new Date(),
     };
 
