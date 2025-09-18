@@ -15,7 +15,6 @@ export function ShiftAssignment() {
   const { 
     getAssignmentByForm, 
     createAssignment, 
-    autoGenerateAssignments, 
     confirmAssignment,
     unpublishAssignment,
     publishAssignment 

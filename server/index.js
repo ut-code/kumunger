@@ -2,8 +2,13 @@ import express from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const prisma = new PrismaClient();
@@ -11,6 +16,9 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+
+// Serve static files from the dist directory (production build)
+app.use(express.static(path.join(__dirname, '../dist')));
 
 // Create new form
 app.post('/api/forms', async (req, res) => {
@@ -373,6 +381,11 @@ app.delete('/api/submissions/:id', async (req, res) => {
     console.error('Error deleting submission:', error);
     res.status(500).json({ error: 'Failed to delete submission' });
   }
+});
+
+// Catch-all handler: send back React's index.html file for any non-API routes
+app.get(/^(?!\/api).*/, (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
 app.listen(PORT, () => {

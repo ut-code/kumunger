@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import type { ShiftSubmission, AvailableSlot } from '../types';
-import { v4 as uuidv4 } from 'uuid';
 
 interface SubmissionStore {
   submissions: ShiftSubmission[];
@@ -23,7 +22,7 @@ interface SubmissionStore {
   getSlotAvailability: (formId: string, slotId: string) => ShiftSubmission[];
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.MODE === 'production' ? '' : 'http://localhost:3001');
 
 export const useSubmissionStore = create<SubmissionStore>((set, get) => ({
   submissions: [],
@@ -32,7 +31,7 @@ export const useSubmissionStore = create<SubmissionStore>((set, get) => ({
     try {
       const response = await fetch(`${API_URL}/api/submissions`);
       if (!response.ok) throw new Error('Failed to fetch submissions');
-      const submissions = await response.json();
+      const submissions = await response.json() as ShiftSubmission[];
       set({ submissions });
     } catch (error) {
       console.error('Error fetching submissions:', error);
@@ -43,7 +42,7 @@ export const useSubmissionStore = create<SubmissionStore>((set, get) => ({
     try {
       const response = await fetch(`${API_URL}/api/forms/${formId}/submissions`);
       if (!response.ok) throw new Error('Failed to fetch submissions');
-      const submissions = await response.json();
+      const submissions = await response.json() as ShiftSubmission[];
       
       set((state) => {
         // Remove old submissions for this form and add new ones
@@ -64,7 +63,7 @@ export const useSubmissionStore = create<SubmissionStore>((set, get) => ({
       });
 
       if (!response.ok) throw new Error('Failed to submit shift');
-      const createdSubmission = await response.json();
+      const createdSubmission = await response.json() as ShiftSubmission;
 
       set((state) => ({
         submissions: [...state.submissions, createdSubmission],

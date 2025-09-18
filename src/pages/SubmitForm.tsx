@@ -26,7 +26,7 @@ export function SubmitForm() {
     const loadForm = async () => {
       if (formId) {
         const formData = await getForm(formId);
-        setForm(formData);
+        setForm(formData ?? null);
         
         if (formData) {
           const initialAvailability: Record<string, AvailableSlot> = {};

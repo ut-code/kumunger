@@ -5,7 +5,6 @@ import {
   Calendar, 
   Users, 
   ClipboardList,
-  Eye,
   Edit,
   Trash2,
   QrCode,
@@ -24,7 +23,6 @@ export function Dashboard() {
   const { submissions, fetchSubmissions } = useSubmissionStore();
   const { assignments } = useAssignmentStore();
   const [showQRCode, setShowQRCode] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     fetchForms();
@@ -120,9 +118,10 @@ export function Dashboard() {
         {forms.map((form) => {
           const stats = getFormStats(form.id);
           return (
-            <div
+            <Link
               key={form.id}
-              className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer"
+              to={`/forms/${form.id}`}
+              className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer block"
             >
               <div className="p-6">
                 <div className="flex justify-between items-start mb-4">
@@ -154,28 +153,30 @@ export function Dashboard() {
                 <div className="flex justify-between items-center pt-4 border-t">
                   <div className="flex space-x-2">
                     <Link
-                      to={`/forms/${form.id}`}
-                      className="p-2 text-gray-600 hover:text-primary-600 hover:bg-gray-50 rounded"
-                      title="詳細"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Link>
-                    <Link
                       to={`/forms/${form.id}/edit`}
                       className="p-2 text-gray-600 hover:text-primary-600 hover:bg-gray-50 rounded"
                       title="編集"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <Edit className="h-4 w-4" />
                     </Link>
                     <button
-                      onClick={() => handleShare(form.id)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleShare(form.id);
+                      }}
                       className="p-2 text-gray-600 hover:text-primary-600 hover:bg-gray-50 rounded"
                       title="共有"
                     >
                       <Share2 className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => handleShowQR(form.id)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleShowQR(form.id);
+                      }}
                       className="p-2 text-gray-600 hover:text-primary-600 hover:bg-gray-50 rounded"
                       title="QRコード"
                     >
@@ -183,7 +184,11 @@ export function Dashboard() {
                     </button>
                   </div>
                   <button
-                    onClick={() => handleDelete(form.id)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleDelete(form.id);
+                    }}
                     className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded"
                     title="削除"
                   >
@@ -191,7 +196,7 @@ export function Dashboard() {
                   </button>
                 </div>
               </div>
-            </div>
+            </Link>
           );
         })}
 
