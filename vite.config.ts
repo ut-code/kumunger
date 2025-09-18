@@ -2,12 +2,12 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
   server: {
     host: '0.0.0.0',
     port: 5173,
-    allowedHosts: typeof process !== 'undefined' && process.env.RENDER
+    allowedHosts: mode === 'production' || process.env.RENDER
       ? [".onrender.com"]
       : [],
     proxy: {
@@ -20,4 +20,4 @@ export default defineConfig({
   build: {
     outDir: 'dist'
   }
-})
+}))
