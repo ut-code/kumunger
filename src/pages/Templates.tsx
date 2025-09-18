@@ -3,7 +3,7 @@ import { Plus, Trash2, FileText } from 'lucide-react';
 import { useFormStore } from '../store/formStore';
 
 export function Templates() {
-  const { templates, createTemplate, deleteTemplate } = useFormStore();
+  const { templates, createEmptyTemplate, deleteTemplate } = useFormStore();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newTemplate, setNewTemplate] = useState({
     name: '',
@@ -11,13 +11,7 @@ export function Templates() {
   });
 
   const handleCreateTemplate = () => {
-    createTemplate({
-      name: newTemplate.name,
-      description: newTemplate.description,
-      timeSlots: [],
-      additionalQuestions: [],
-      requiredRoles: [],
-    });
+    createEmptyTemplate(newTemplate.name, newTemplate.description);
     setNewTemplate({ name: '', description: '' });
     setShowCreateModal(false);
   };
