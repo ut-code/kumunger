@@ -24,8 +24,16 @@ export function FormBuilder() {
     title: '',
     description: '',
     startDate: format(new Date(), 'yyyy-MM-dd'),
-    endDate: format(addDays(new Date(), 7), 'yyyy-MM-dd'),
+    endDate: format(addDays(new Date(), 3), 'yyyy-MM-dd'),
   });
+
+  const [timeSlotFormData, setTimeSlotFormData] = useState({
+    eventStart: '09:00',
+    eventEnd: '18:00',
+    breaks: [] as { start: string; end: string }[],
+    shiftLengthHours: 3,
+    staff: 3,
+  })
 
   const [currentStep, setCurrentStep] = useState(0);
   const [timeSlots, setTimeSlots] = useState<Omit<TimeSlot, 'id'>[]>([]);
@@ -95,24 +103,65 @@ export function FormBuilder() {
     });
 
     const slots: Omit<TimeSlot, 'id'>[] = [];
-    const timeRanges = [
-      { start: '09:00', end: '12:00' },
-      { start: '12:00', end: '15:00' },
-      { start: '15:00', end: '18:00' },
-      { start: '18:00', end: '21:00' },
-    ];
+    
+    const eventStart = timeSlotFormData.eventStart;
+    const eventEnd = timeSlotFormData.eventEnd;
+    const breaks = timeSlotFormData.breaks || [];
+    const shiftLengthHours = timeSlotFormData.shiftLengthHours;
+    const staff = timeSlotFormData.staff;
 
     dates.forEach(date => {
-      timeRanges.forEach(range => {
-        slots.push({
-          date,
-          startTime: range.start,
-          endTime: range.end,
-          requiredStaff: 3,
-          minStaff: 2,
-          maxStaff: 5,
+      let current = new Date(`${date.toDateString()} ${eventStart}`);
+      const end = new Date(`${date.toDateString()} ${eventEnd}`);
+
+      while(current < end){
+        let slotEnd = new Date(current);
+        slotEnd.setHours(slotEnd.getHours() + shiftLengthHours);
+        
+        if(slotEnd > end){
+          slotEnd = end;
+        }
+
+        let slotParts: { start: Date; end: Date }[] = [{ start: current, end: slotEnd }];
+
+        breaks.forEach((br: { start: string; end: string }) => {
+          const breakStart = new Date(`${date.toDateString()} ${br.start}`);
+          const breakEnd = new Date(`${date.toDateString()} ${br.end}`);
+
+          const newParts: { start: Date; end: Date }[] = [];
+
+          slotParts.forEach((part) => {
+            if(part.end <= breakStart || part.start >= breakEnd){
+              newParts.push(part);
+            }
+            else{
+              if(part.start < breakStart){
+                newParts.push({ start: part.start, end: breakStart });
+              }
+              if(part.end > breakEnd){
+                newParts.push({ start: breakEnd, end:part.end });
+              }
+            }
+          });
+
+          slotParts = newParts;
         });
-      });
+
+        slotParts.forEach((p) => {
+          if(p.start < p.end){
+            slots.push({
+              date,
+              startTime: p.start.toTimeString().slice(0, 5),
+              endTime: p.end.toTimeString().slice(0, 5),
+              requiredStaff: staff,
+              minStaff:2,
+              maxStaff:5,
+            });
+          }
+        });
+
+        current = slotEnd;
+      }
     });
 
     setTimeSlots(slots);
@@ -254,6 +303,54 @@ export function FormBuilder() {
           <div className="space-y-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">時間帯設定</h2>
+              <div className="grid grid-cols-4 gap-4 mb-4">
+                <div>
+                  <label>開始時間</label>
+                  <input
+                    type="time"
+                    value={timeSlotFormData.eventStart}
+                    onChange={(e) =>
+                      setTimeSlotFormData({ ...timeSlotFormData, eventStart: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+                <div>
+                  <label>終了時間</label>
+                  <input
+                    type="time"
+                    value={timeSlotFormData.eventEnd}
+                    onChange={(e) =>
+                      setTimeSlotFormData({ ...timeSlotFormData, eventEnd: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+                <div>
+                  <label>シフト時間(時間)</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={timeSlotFormData.shiftLengthHours}
+                    onChange={(e) =>
+                      setTimeSlotFormData({ ...timeSlotFormData, shiftLengthHours: Number(e.target.value) })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+                <div>
+                  <label>必要人数</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={timeSlotFormData.staff}
+                    onChange={(e) =>
+                      setTimeSlotFormData({ ...timeSlotFormData, staff: Number(e.target.value) })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+              </div>
               <div className="space-x-2">
                 <button
                   onClick={handleGenerateTimeSlots}
@@ -540,7 +637,13 @@ export function FormBuilder() {
           <div className="space-x-3">
             {currentStep < steps.length - 1 ? (
               <button
-                onClick={() => setCurrentStep(currentStep + 1)}
+                onClick={() => {
+                  if (currentStep === 0 && formData.title.trim() === '') {
+                    alert('フォームタイトルを入力してください');
+                    return;
+                  }
+                  setCurrentStep(currentStep + 1)
+                }}
                 className="px-4 py-2 text-sm bg-primary-600 text-white rounded hover:bg-primary-700"
               >
                 次へ
