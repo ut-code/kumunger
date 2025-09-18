@@ -1,10 +1,18 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+// Module declarations for build environment
+declare module 'vite' {
+  export function defineConfig(config: any): any
+}
+declare module '@vitejs/plugin-react' {
+  export default function react(): any
+}
 
 // Type-safe access to process.env
 declare const process: {
   env: Record<string, string | undefined>
 }
+
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
