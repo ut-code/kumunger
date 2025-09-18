@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { 
-  Plus, 
-  Calendar, 
-  Users, 
+import { Link, Navigate } from 'react-router-dom';
+import {
+  Plus,
+  Calendar,
+  Users,
   ClipboardList,
   Eye,
   Edit,
@@ -13,6 +13,7 @@ import {
   CheckCircle,
   Clock,
 } from 'lucide-react';
+import { useAccountStore } from '../store/accountStore';
 import { useFormStore } from '../store/formStore';
 import { useSubmissionStore } from '../store/submissionStore';
 import { useAssignmentStore } from '../store/assignmentStore';
@@ -33,7 +34,7 @@ export function Dashboard() {
   const getFormStats = (formId: string) => {
     const formSubmissions = submissions.filter(s => s.formId === formId);
     const formAssignment = assignments.find(a => a.formId === formId);
-    
+
     return {
       submissions: formSubmissions.length,
       status: formAssignment?.status || 'draft',
@@ -127,7 +128,7 @@ export function Dashboard() {
                   </h3>
                   {getStatusBadge(stats.status)}
                 </div>
-                
+
                 {form.description && (
                   <p className="text-sm text-gray-600 mb-4">{form.description}</p>
                 )}

@@ -1,7 +1,10 @@
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
+import { EqualApproximately } from 'lucide-react';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 dotenv.config();
 
@@ -9,21 +12,112 @@ const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+app.use(cookieParser())
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+}));
 app.use(express.json({ limit: '10mb' }));
+
+app.post('/api/auth', async (req, res) => {
+  try {
+    const session = await prisma.session.findUnique({
+      where: {
+        id: req.cookies.session ?? ''
+      }
+    });
+    if (session) {
+      const user = await prisma.user.findUnique({
+        where: {
+          id: session.userId
+        }
+      }); res.status(200).json({
+        username: user.username
+      });
+    }
+    else res.status(401).json({});
+  } catch (error) {
+    console.log('Failed to auth', error);
+    res.status(401).json({});
+  }
+});
+
+// Accept signin
+app.post('/api/signin', async (req, res) => {
+  try {
+    const account = await prisma.user.findUnique({
+      where: {
+        username: req.body.username
+      }
+    });
+
+    if (!account) {
+      res.status(401).json({ error: 'No user' });
+      return;
+    }
+    if (account.password != req.body.password) {
+      res.status(401).json({ error: 'Wrong password' });
+      return;
+    }
+
+    const session = await prisma.session.create({
+      data: {
+        userId: account.id
+      }
+    });
+
+    res.cookie('session', session.id, {
+      maxAge: 1 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none'
+    });
+    res.json(session);
+  } catch (error) {
+    if (error instanceof PrismaClientKnownRequestError) {
+      switch (error.code) {
+      }
+    }
+    console.error('Error Accepting Sign in:', error);
+    res.status(500).json({ error: 'Failed to Sign in' });
+  }
+});
+
+// Accept sign up
+app.post('/api/signup', async (req, res) => {
+  try {
+    const account = await prisma.user.create({
+      data: {
+        username: req.body.username,
+        password: req.body.password
+      }
+    });
+    res.json(account);
+  } catch (error) {
+    if (error instanceof PrismaClientKnownRequestError) {
+      switch (error.code) {
+        case 'P2002':
+          res.status(401).json({ error: 'Username already taken' });
+          return;
+      }
+    }
+    console.error('Error Accepting Sign up:', error);
+    res.status(500).json({ error: 'Failed to Sign up' });
+  }
+});
 
 // Create new form
 app.post('/api/forms', async (req, res) => {
   try {
-    const { 
-      title, 
-      description, 
-      startDate, 
-      endDate, 
-      timeSlots, 
-      additionalQuestions, 
+    const {
+      title,
+      description,
+      startDate,
+      endDate,
+      timeSlots,
+      additionalQuestions,
       requiredRoles,
-      isActive 
+      isActive
     } = req.body;
 
     const form = await prisma.shiftForm.create({
@@ -210,9 +304,9 @@ app.post('/api/forms/:id/share-url', async (req, res) => {
   try {
     const { id } = req.params;
     const { baseUrl } = req.body;
-    
+
     const shareUrl = `${baseUrl}/submit/${id}`;
-    
+
     const form = await prisma.shiftForm.update({
       where: { id },
       data: { shareUrl },
@@ -235,7 +329,7 @@ app.post('/api/forms/:id/qr-code', async (req, res) => {
   try {
     const { id } = req.params;
     const { qrCode } = req.body;
-    
+
     const form = await prisma.shiftForm.update({
       where: { id },
       data: { qrCode },
@@ -299,7 +393,7 @@ app.post('/api/submissions', async (req, res) => {
 app.get('/api/forms/:formId/submissions', async (req, res) => {
   try {
     const { formId } = req.params;
-    
+
     const submissions = await prisma.shiftSubmission.findMany({
       where: { formId },
       include: {
@@ -340,7 +434,7 @@ app.get('/api/submissions', async (req, res) => {
 app.get('/api/submissions/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const submission = await prisma.shiftSubmission.findUnique({
       where: { id },
       include: {
@@ -363,7 +457,7 @@ app.get('/api/submissions/:id', async (req, res) => {
 app.delete('/api/submissions/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     await prisma.shiftSubmission.delete({
       where: { id }
     });
