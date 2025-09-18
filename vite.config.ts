@@ -1,16 +1,3 @@
-// Module declarations for build environment
-declare module 'vite' {
-  export function defineConfig(config: any): any
-}
-declare module '@vitejs/plugin-react' {
-  export default function react(): any
-}
-
-// Type-safe access to process.env
-declare const process: {
-  env: Record<string, string | undefined>
-}
-
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -20,7 +7,7 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
-    allowedHosts: process.env.RENDER
+    allowedHosts: typeof process !== 'undefined' && process.env.RENDER
       ? [".onrender.com"]
       : [],
     proxy: {
