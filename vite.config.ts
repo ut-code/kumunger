@@ -1,10 +1,7 @@
+// @ts-ignore
 import { defineConfig } from 'vite'
+// @ts-ignore  
 import react from '@vitejs/plugin-react'
-
-// Node.js process declaration for this file
-declare const process: {
-  env: Record<string, string | undefined>
-}
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -12,7 +9,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: '0.0.0.0',
     port: 5173,
-    allowedHosts: mode === 'production' || process.env.RENDER
+    allowedHosts: mode === 'production' || (typeof process !== 'undefined' && process.env?.RENDER)
       ? [".onrender.com"]
       : [],
     proxy: {
