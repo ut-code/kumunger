@@ -21,7 +21,7 @@ import { ja } from 'date-fns/locale';
 
 export function Dashboard() {
   const { forms, fetchForms, deleteForm, generateShareUrl, generateQRCode } = useFormStore();
-  const { submissions } = useSubmissionStore();
+  const { submissions, fetchSubmissions } = useSubmissionStore();
   const { assignments } = useAssignmentStore();
   const [showQRCode, setShowQRCode] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,6 +29,10 @@ export function Dashboard() {
   useEffect(() => {
     fetchForms();
   }, [fetchForms]);
+
+  useEffect(() => {
+    fetchSubmissions();
+  }, [fetchSubmissions]);
 
   const getFormStats = (formId: string) => {
     const formSubmissions = submissions.filter(s => s.formId === formId);
@@ -85,7 +89,7 @@ export function Dashboard() {
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
             <Clock className="w-3 h-3 mr-1" />
-            下書き
+            受付中
           </span>
         );
       default:
