@@ -63,7 +63,7 @@ export const useFormStore = create<FormStore>((set, get) => ({
     try {
       const response = await fetch(`${API_URL}/api/forms`);
       if (!response.ok) throw new Error('Failed to fetch forms');
-      const forms = await response.json();
+      const forms = await response.json() as ShiftForm[];
       set({ forms });
     } catch (error) {
       console.error('Error fetching forms:', error);
@@ -90,7 +90,7 @@ export const useFormStore = create<FormStore>((set, get) => ({
       });
 
       if (!response.ok) throw new Error('Failed to create form');
-      const createdForm = await response.json();
+      const createdForm = await response.json() as ShiftForm;
       
       set((state) => ({
         forms: [createdForm, ...state.forms],
@@ -113,7 +113,7 @@ export const useFormStore = create<FormStore>((set, get) => ({
       });
 
       if (!response.ok) throw new Error('Failed to update form');
-      const updatedForm = await response.json();
+      const updatedForm = await response.json() as ShiftForm;
 
       set((state) => ({
         forms: state.forms.map((form) =>
@@ -158,7 +158,7 @@ export const useFormStore = create<FormStore>((set, get) => ({
         throw new Error('Failed to fetch form');
       }
       
-      const form = await response.json();
+      const form = await response.json() as ShiftForm;
       
       // Update local state with fetched form
       set((state) => {
@@ -203,7 +203,7 @@ export const useFormStore = create<FormStore>((set, get) => ({
       });
 
       if (!response.ok) throw new Error('Failed to duplicate form');
-      const createdForm = await response.json();
+      const createdForm = await response.json() as ShiftForm;
 
       set((state) => ({
         forms: [createdForm, ...state.forms],
@@ -404,7 +404,7 @@ export const useFormStore = create<FormStore>((set, get) => ({
 
   generateShareUrl: async (formId) => {
     try {
-      const baseUrl = window.location.origin;
+      const baseUrl = (typeof window !== 'undefined') ? window.location.origin : 'http://localhost:5173';
       const response = await fetch(`${API_URL}/api/forms/${formId}/share-url`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -412,7 +412,7 @@ export const useFormStore = create<FormStore>((set, get) => ({
       });
 
       if (!response.ok) throw new Error('Failed to generate share URL');
-      const updatedForm = await response.json();
+      const updatedForm = await response.json() as ShiftForm;
 
       set((state) => ({
         forms: state.forms.map((form) =>
@@ -420,7 +420,7 @@ export const useFormStore = create<FormStore>((set, get) => ({
         ),
       }));
 
-      return updatedForm.shareUrl;
+      return updatedForm.shareUrl || '';
     } catch (error) {
       console.error('Error generating share URL:', error);
       return '';
@@ -442,7 +442,7 @@ export const useFormStore = create<FormStore>((set, get) => ({
       });
 
       if (!response.ok) throw new Error('Failed to save QR code');
-      const updatedForm = await response.json();
+      const updatedForm = await response.json() as ShiftForm;
 
       set((state) => ({
         forms: state.forms.map((form) =>

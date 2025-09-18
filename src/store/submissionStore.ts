@@ -31,7 +31,7 @@ export const useSubmissionStore = create<SubmissionStore>((set, get) => ({
     try {
       const response = await fetch(`${API_URL}/api/submissions`);
       if (!response.ok) throw new Error('Failed to fetch submissions');
-      const submissions = await response.json();
+      const submissions = await response.json() as ShiftSubmission[];
       set({ submissions });
     } catch (error) {
       console.error('Error fetching submissions:', error);
@@ -42,7 +42,7 @@ export const useSubmissionStore = create<SubmissionStore>((set, get) => ({
     try {
       const response = await fetch(`${API_URL}/api/forms/${formId}/submissions`);
       if (!response.ok) throw new Error('Failed to fetch submissions');
-      const submissions = await response.json();
+      const submissions = await response.json() as ShiftSubmission[];
       
       set((state) => {
         // Remove old submissions for this form and add new ones
@@ -63,7 +63,7 @@ export const useSubmissionStore = create<SubmissionStore>((set, get) => ({
       });
 
       if (!response.ok) throw new Error('Failed to submit shift');
-      const createdSubmission = await response.json();
+      const createdSubmission = await response.json() as ShiftSubmission;
 
       set((state) => ({
         submissions: [...state.submissions, createdSubmission],
