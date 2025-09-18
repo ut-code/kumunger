@@ -8,6 +8,8 @@
     "dev:server": "node server/index.js",
     "dev:all": "npm run dev:server & npm run dev",
     "build": "tsc -b && vite build",
+    "start": "node server/index.js",
+    "postbuild": "npx prisma generate",
     "lint": "eslint .",
     "preview": "vite preview"
   },
