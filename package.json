@@ -4,15 +4,15 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "npx vite",
     "dev:server": "node server/index.js",
     "dev:all": "npm run dev:server & npm run dev",
-    "build": "vite build",
-    "typecheck": "tsc -b",
+    "build": "npx vite build",
+    "typecheck": "npx tsc -b",
     "start": "node server/index.js",
     "postbuild": "npx prisma generate",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "npx vite preview"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
