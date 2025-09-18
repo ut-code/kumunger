@@ -13,29 +13,40 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String
+}
+
+model Session {
+  id     String @id @default(dbgenerated("uuid_generate_v4()"))
+  userId Int
+}
+
 model ShiftForm {
-  id                  String              @id @default(uuid())
-  title               String
-  description         String?
-  startDate           DateTime
-  endDate             DateTime
-  isActive            Boolean             @default(true)
-  shareUrl            String?
-  qrCode              String?             @db.Text
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
-  
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  shareUrl    String?
+  qrCode      String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
   timeSlots           TimeSlot[]
   additionalQuestions Question[]
   requiredRoles       Role[]
   submissions         ShiftSubmission[]
   assignments         ShiftAssignment[]
-  
+
   @@map("shift_forms")
 }
 
 model TimeSlot {
-  id            String    @id @default(uuid())
+  id            String   @id @default(uuid())
   formId        String
   date          DateTime
   startTime     String
@@ -43,147 +54,147 @@ model TimeSlot {
   requiredStaff Int
   minStaff      Int
   maxStaff      Int
-  
-  form          ShiftForm @relation(fields: [formId], references: [id], onDelete: Cascade)
-  
+
+  form ShiftForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+
   @@map("time_slots")
 }
 
 model Question {
-  id       String   @id @default(uuid())
+  id       String  @id @default(uuid())
   formId   String
-  type     String   // 'text' | 'select' | 'multiselect' | 'textarea'
+  type     String // 'text' | 'select' | 'multiselect' | 'textarea'
   label    String
   required Boolean
-  options  Json?    // Array of strings stored as JSON
-  
-  form     ShiftForm @relation(fields: [formId], references: [id], onDelete: Cascade)
-  
+  options  Json? // Array of strings stored as JSON
+
+  form ShiftForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+
   @@map("questions")
 }
 
 model Role {
-  id         String    @id @default(uuid())
-  formId     String
-  name       String
-  color      String
+  id          String @id @default(uuid())
+  formId      String
+  name        String
+  color       String
   minRequired Int?
   maxAllowed  Int?
-  
-  form       ShiftForm @relation(fields: [formId], references: [id], onDelete: Cascade)
-  
+
+  form ShiftForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+
   @@map("roles")
 }
 
 model ShiftSubmission {
-  id            String           @id @default(uuid())
-  formId        String
-  staffName     String
-  email         String?
-  phoneNumber   String?
-  answers       Json             // Record<string, any> stored as JSON
-  priority      Int?
-  submittedAt   DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  
-  form          ShiftForm        @relation(fields: [formId], references: [id], onDelete: Cascade)
+  id          String   @id @default(uuid())
+  formId      String
+  staffName   String
+  email       String?
+  phoneNumber String?
+  answers     Json // Record<string, any> stored as JSON
+  priority    Int?
+  submittedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  form           ShiftForm       @relation(fields: [formId], references: [id], onDelete: Cascade)
   availableSlots AvailableSlot[]
-  
+
   @@map("shift_submissions")
 }
 
 model AvailableSlot {
-  id            String          @id @default(uuid())
+  id            String  @id @default(uuid())
   submissionId  String
   slotId        String
   isAvailable   Boolean
   preferredRole String?
   notes         String?
-  
-  submission    ShiftSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  
+
+  submission ShiftSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
   @@map("available_slots")
 }
 
 model ShiftAssignment {
-  id          String       @id @default(uuid())
+  id          String    @id @default(uuid())
   formId      String
-  status      String       // 'draft' | 'confirmed' | 'published'
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  status      String // 'draft' | 'confirmed' | 'published'
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   publishedAt DateTime?
-  
+
   form        ShiftForm    @relation(fields: [formId], references: [id], onDelete: Cascade)
   assignments Assignment[]
-  
+
   @@map("shift_assignments")
 }
 
 model Assignment {
-  id                String            @id @default(uuid())
-  assignmentId      String
-  slotId            String
-  
-  shiftAssignment   ShiftAssignment   @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  staffAssignments  StaffAssignment[]
-  
+  id           String @id @default(uuid())
+  assignmentId String
+  slotId       String
+
+  shiftAssignment  ShiftAssignment   @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  staffAssignments StaffAssignment[]
+
   @@map("assignments")
 }
 
 model StaffAssignment {
-  id           String     @id @default(uuid())
+  id           String  @id @default(uuid())
   assignmentId String
   staffId      String
   staffName    String
   role         String?
-  isConfirmed  Boolean    @default(false)
-  
-  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  
+  isConfirmed  Boolean @default(false)
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
   @@map("staff_assignments")
 }
 
 model ShiftRule {
-  id       String  @id @default(uuid())
-  type     String  // 'ng_combination' | 'required_role' | 'skill_balance' | 'min_staff' | 'max_consecutive'
-  name     String
-  enabled  Boolean @default(true)
-  config   Json    // Record<string, any> stored as JSON
-  
+  id      String  @id @default(uuid())
+  type    String // 'ng_combination' | 'required_role' | 'skill_balance' | 'min_staff' | 'max_consecutive'
+  name    String
+  enabled Boolean @default(true)
+  config  Json // Record<string, any> stored as JSON
+
   @@map("shift_rules")
 }
 
 model Staff {
-  id           String   @id @default(uuid())
-  name         String
-  email        String?
-  phoneNumber  String?
-  skillLevel   String   // 'junior' | 'intermediate' | 'senior'
-  joinedAt     DateTime @default(now())
-  
+  id          String   @id @default(uuid())
+  name        String
+  email       String?
+  phoneNumber String?
+  skillLevel  String // 'junior' | 'intermediate' | 'senior'
+  joinedAt    DateTime @default(now())
+
   @@map("staff")
 }
 
 model Template {
-  id                  String   @id @default(uuid())
-  name                String
-  description         String?
-  timeSlotTemplate    Json     // Array of time slot templates
-  questionTemplate    Json     // Array of question templates
-  roleTemplate        Json     // Array of role templates
-  createdAt           DateTime @default(now())
-  
+  id               String   @id @default(uuid())
+  name             String
+  description      String?
+  timeSlotTemplate Json // Array of time slot templates
+  questionTemplate Json // Array of question templates
+  roleTemplate     Json // Array of role templates
+  createdAt        DateTime @default(now())
+
   @@map("templates")
 }
 
 model Notification {
   id         String    @id @default(uuid())
-  type       String    // 'email' | 'line'
-  recipients Json      // Array of strings
+  type       String // 'email' | 'line'
+  recipients Json // Array of strings
   subject    String
   message    String    @db.Text
   sentAt     DateTime?
-  status     String    // 'pending' | 'sent' | 'failed'
-  
+  status     String // 'pending' | 'sent' | 'failed'
+
   @@map("notifications")
 }
