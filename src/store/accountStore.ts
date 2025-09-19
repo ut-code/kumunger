@@ -8,7 +8,7 @@ interface AccountStore {
   apiUrl: string;
 
   authorize: () => Promise<void>;
-  requestSignin: (username: string, password: string) => Promise<boolean>;
+  requestSignin: (username: string, password: string) => Promise<Number>;
   requestSignup: (username: string, password: string) => Promise<boolean>;
 }
 
@@ -43,18 +43,18 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
         }),
         credentials: 'include'
       });
-      if (!response.ok) throw new Error('Failed to Sign in');
-      //const account = await response.json();
 
-      set(() => ({
-        username: username,
-        authenticated: true
-      }));
+      if (response.ok) {
+        set(() => ({
+          username: username,
+          authenticated: true
+        }));
+      }
 
-      return true;
+      return response.status;
     } catch (error) {
       console.log('Failed to Sign in: ', error);
-      return false;
+      return 500;
     }
   },
   requestSignup: async (username, password) => {
