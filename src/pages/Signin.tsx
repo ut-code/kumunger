@@ -8,6 +8,7 @@ export function Signin() {
     const name = useRef<HTMLInputElement>(null);
     const pass = useRef<HTMLInputElement>(null);
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (name.current)
@@ -15,16 +16,29 @@ export function Signin() {
     }, []);
 
     const handleSignin = async () => {
+        if (loading) return;
+        setLoading(true);
+        setError('');
+
         if (name.current?.value && pass.current?.value) {
-            if (await requestSignin(name.current?.value, pass.current?.value))
-                navigate('/dashboard');
-            else
-                setError('ユーザ名かパスワードが間違っています');
+            const status = await requestSignin(name.current?.value, pass.current?.value);
+            switch (status) {
+                case 200:
+                    navigate('/dashboard');
+                    break;
+                case 401:
+                    setError('ユーザ名かパスワードが間違っています');
+                    break;
+                case 500:
+                    setError('予期せぬエラーが発生しました');
+                    break;
+            }
         }
         else if (!name.current?.value)
             setError('ユーザ名を入力してください');
         else
             setError('パスワードを入力してください');
+        setLoading(false);
     };
 
     return <div className="bg-white rounded-lg w-screen h-screen shadow p-6 flex items-center justify-center">
@@ -54,9 +68,15 @@ export function Signin() {
             </div>
             <div className='text-xs text-red-500'>{error}</div>
             <div className="flex justify-center">
-                <button className="p-2 rounded text-white bg-primary-600 hover:bg-primary-700"
+                <button className="rounded text-white bg-primary-600 hover:bg-primary-700"
                     onClick={handleSignin}>
-                    サインイン
+                    <div className="w-20 h-10 flex justify-center items-center">
+                        {
+                            loading
+                                ? <div className="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"></div>
+                                : (<>サインイン</>)
+                        }
+                    </div>
                 </button>
             </div>
             <div className="w-full flex justify-center">
