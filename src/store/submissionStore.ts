@@ -22,7 +22,7 @@ interface SubmissionStore {
   getSlotAvailability: (formId: string, slotId: string) => ShiftSubmission[];
 }
 
-const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.MODE === 'production' ? '' : 'http://localhost:3001');
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:3001');
 
 export const useSubmissionStore = create<SubmissionStore>((set, get) => ({
   submissions: [],
