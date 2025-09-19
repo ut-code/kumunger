@@ -625,14 +625,23 @@ export function FormBuilder() {
         )}
 
         <div className="mt-8 flex justify-between">
-          <button
-            onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-            disabled={currentStep === 0}
+          {currentStep === 0 ? (
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="inline-flex items-center px-4 py-2 text-sm border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
+            >
+              <ChevronLeft className="w-4 h-4 inline mr-1" />
+              ダッシュボードへ戻る
+            </button>
+          ) : (
+            <button
+              onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
             className="px-4 py-2 text-sm border border-gray-300 rounded text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ChevronLeft className="w-4 h-4 inline mr-1" />
-            前へ
-          </button>
+            >
+              <ChevronLeft className="w-4 h-4 inline mr-1" />
+              前へ
+            </button>
+          )}
           
           <div className="space-x-3">
             {currentStep < steps.length - 1 ? (
