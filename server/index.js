@@ -59,11 +59,11 @@ app.post('/api/signin', async (req, res) => {
     });
 
     if (!account) {
-      res.status(401).json({ error: 'No user' });
+      res.status(401).json({ error: 'Unauthorized' });
       return;
     }
     if (account.password != req.body.password) {
-      res.status(401).json({ error: 'Wrong password' });
+      res.status(401).json({ error: 'Unauthorized' });
       return;
     }
 

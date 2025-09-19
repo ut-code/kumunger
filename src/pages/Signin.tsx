@@ -1,6 +1,6 @@
 ﻿import { useState, useRef, useEffect } from 'react';
 import { useAccountStore } from '../store/accountStore';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export function Signin() {
     const navigate = useNavigate();
@@ -27,9 +27,9 @@ export function Signin() {
             setError('パスワードを入力してください');
     };
 
-    return <div className="bg-white rounded-lg w-full h-full shadow p-6 flex items-center justify-center">
-        <div className="space-y-3">
-            <h2 className="text-xl font-semibold mb-4 text-center">サインイン</h2>
+    return <div className="bg-white rounded-lg w-screen h-screen shadow p-6 flex items-center justify-center">
+        <div className="space-y-4">
+            <h2 className="text-xl font-semibold mb-4 text-center">組むんジャー</h2>
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                     ユーザ名
@@ -37,6 +37,8 @@ export function Signin() {
                 <input
                     type="text" className="w-150 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                     onKeyDown={(e) => e.key == 'Enter' && pass.current?.focus()}
+                    onChange={() => setError('')}
+                    onBlur={() => name.current?.value == '' ? setError('ユーザ名を入力してください') : setError('')}
                     ref={name}
                 />
             </div>
@@ -56,6 +58,9 @@ export function Signin() {
                     onClick={handleSignin}>
                     サインイン
                 </button>
+            </div>
+            <div className="w-full flex justify-center">
+                <Link to={'/signup'} className='text-sm text-blue-800'>アカウントを新規作成</Link>
             </div>
         </div>
     </div>;
