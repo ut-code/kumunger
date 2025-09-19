@@ -26,6 +26,7 @@ model Session {
 
 model ShiftForm {
   id          String   @id @default(uuid())
+  userId      Int
   title       String
   description String?
   startDate   DateTime
