@@ -5,6 +5,7 @@ import {
   Edit, 
   Users, 
   Calendar,
+  Clock,
   Share2,
   QrCode,
   ArrowLeft,
@@ -105,6 +106,23 @@ export function FormDetail() {
                   <Users className="w-4 h-4 mr-1" />
                   {submissions.length} 件の回答
                 </div>
+                <div className="flex items-center">
+                  <Clock className="w-4 h-4 mr-1" />
+                    {form.timeSlots.length} 個の時間帯
+                </div>
+                <div className="flex items-center">
+                  {form.isActive ? (
+                    <span className="inline-flex items-center text-green-700">
+                      <CheckCircle className="w-4 h-4 mr-1" />
+                      受付中
+                    </span>
+                  ) : (
+                    <span className="flex items-center text-gray-500">
+                      <span className="text-gray-500" />
+                      受付終了
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
             
@@ -166,28 +184,6 @@ export function FormDetail() {
                 <Calendar className="w-12 h-12 text-gray-400" />
               </div>
             </Link>
-
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">フォーム状態</h3>
-                  <p className="mt-1 text-sm font-medium">
-                    {form.isActive ? (
-                      <span className="inline-flex items-center text-green-700">
-                        <CheckCircle className="w-4 h-4 mr-1" />
-                        受付中
-                      </span>
-                    ) : (
-                      <span className="text-gray-500">受付終了</span>
-                    )}
-                  </p>
-                  <p className="mt-1 text-sm text-gray-500">
-                    {form.timeSlots.length} 個の時間帯
-                  </p>
-                </div>
-                <Users className="w-12 h-12 text-gray-400" />
-              </div>
-            </div>
           </div>
 
           <div className="mt-8">
