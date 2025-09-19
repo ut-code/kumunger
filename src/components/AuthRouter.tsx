@@ -3,11 +3,15 @@ import { useAccountStore } from '../store/accountStore';
 import { useEffect, type ReactElement } from 'react';
 
 export function PrivateRoute({ children }: { children: ReactElement }) {
-    const { authenticated, authorize } = useAccountStore();
+    const { loading, authenticated, authorize } = useAccountStore();
 
     useEffect(() => {
         authorize();
     }, []);
+
+    if (loading) {
+        return <></>;
+    }
 
     if (!authenticated) {
         return <Navigate to='/signin' />;
@@ -16,7 +20,11 @@ export function PrivateRoute({ children }: { children: ReactElement }) {
     return children;
 }
 export function AuthRoute({ children }: { children: ReactElement }) {
-    const { authenticated } = useAccountStore();
+    const { authenticated, authorize } = useAccountStore();
+
+    useEffect(() => {
+        authorize();
+    }, []);
 
     if (authenticated) {
         return <Navigate to='/dashboard' />;

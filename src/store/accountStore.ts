@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 interface AccountStore {
   username: string;
+  loading: boolean;
   authenticated: boolean;
 
   // API base URL
@@ -15,21 +16,30 @@ interface AccountStore {
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
-export const useAccountStore = create<AccountStore>((set, get) => ({
+export const useAccountStore = create<AccountStore>((set) => ({
   username: '',
+  loading: true,
   authenticated: false,
   apiUrl: API_URL,
 
   authorize: async () => {
-    const response = await fetch(`${API_URL}/api/auth`, {
-      method: 'POST',
-      credentials: 'include'
-    });
-    if (response.ok) {
-      const json = await response.json();
+    try {
+      const response = await fetch(`${API_URL}/api/auth`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const json = await response.json();
+        set({
+          username: json.username,
+          authenticated: true
+        });
+      }
+    } catch (error) {
+      console.log('Failed to authenticate: ', error);
+    } finally {
       set({
-        username: json.username,
-        authenticated: true
+        loading: false
       });
     }
   },
