@@ -51,10 +51,10 @@ app.post('/api/auth', async (req, res) => {
         username: user.username
       });
     }
-    else res.status(401).json({});
+    else res.status(401).end();
   } catch (error) {
     console.log('Failed to auth', error);
-    res.status(401).json({});
+    res.status(401).end();
   }
 });
 
@@ -68,11 +68,11 @@ app.post('/api/signin', async (req, res) => {
     });
 
     if (!account) {
-      res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).end();
       return;
     }
     if (account.password != req.body.password) {
-      res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).end();
       return;
     }
 
@@ -95,7 +95,7 @@ app.post('/api/signin', async (req, res) => {
       }
     }
     console.error('Error Accepting Sign in:', error);
-    res.status(500).json({ error: 'Failed to Sign in' });
+    res.status(500).end();
   }
 });
 
@@ -118,7 +118,7 @@ app.post('/api/signup', async (req, res) => {
       }
     }
     console.error('Error Accepting Sign up:', error);
-    res.status(500).json({ error: 'Failed to Sign up' });
+    res.status(500).end();
   }
 });
 
@@ -180,7 +180,7 @@ app.post('/api/forms', async (req, res) => {
     res.json(form);
   } catch (error) {
     console.error('Error creating form:', error);
-    res.status(500).json({ error: 'Failed to create form' });
+    res.status(500).end();
   }
 });
 
@@ -200,7 +200,7 @@ app.get('/api/forms', async (req, res) => {
     res.json(forms);
   } catch (error) {
     console.error('Error fetching forms:', error);
-    res.status(500).json({ error: 'Failed to fetch forms' });
+    res.status(500).end();
   }
 });
 
@@ -223,13 +223,13 @@ app.get('/api/forms/:id', async (req, res) => {
     });
 
     if (!form) {
-      return res.status(404).json({ error: 'Form not found' });
+      return res.status(404).end();
     }
 
     res.json(form);
   } catch (error) {
     console.error('Error fetching form:', error);
-    res.status(500).json({ error: 'Failed to fetch form' });
+    res.status(500).end();
   }
 });
 
@@ -297,7 +297,7 @@ app.put('/api/forms/:id', async (req, res) => {
     res.json(form);
   } catch (error) {
     console.error('Error updating form:', error);
-    res.status(500).json({ error: 'Failed to update form' });
+    res.status(500).end();
   }
 });
 
@@ -311,7 +311,7 @@ app.delete('/api/forms/:id', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('Error deleting form:', error);
-    res.status(500).json({ error: 'Failed to delete form' });
+    res.status(500).end();
   }
 });
 
@@ -336,7 +336,7 @@ app.post('/api/forms/:id/share-url', async (req, res) => {
     res.json(form);
   } catch (error) {
     console.error('Error generating share URL:', error);
-    res.status(500).json({ error: 'Failed to generate share URL' });
+    res.status(500).end();
   }
 });
 
@@ -359,7 +359,7 @@ app.post('/api/forms/:id/qr-code', async (req, res) => {
     res.json(form);
   } catch (error) {
     console.error('Error saving QR code:', error);
-    res.status(500).json({ error: 'Failed to save QR code' });
+    res.status(500).end();
   }
 });
 
@@ -401,7 +401,7 @@ app.post('/api/submissions', async (req, res) => {
     res.json(submission);
   } catch (error) {
     console.error('Error creating submission:', error);
-    res.status(500).json({ error: 'Failed to create submission' });
+    res.status(500).end();
   }
 });
 
@@ -423,7 +423,7 @@ app.get('/api/forms/:formId/submissions', async (req, res) => {
     res.json(submissions);
   } catch (error) {
     console.error('Error fetching submissions:', error);
-    res.status(500).json({ error: 'Failed to fetch submissions' });
+    res.status(500).end();
   }
 });
 
@@ -442,7 +442,7 @@ app.get('/api/submissions', async (req, res) => {
     res.json(submissions);
   } catch (error) {
     console.error('Error fetching submissions:', error);
-    res.status(500).json({ error: 'Failed to fetch submissions' });
+    res.status(500).end();
   }
 });
 
@@ -459,13 +459,13 @@ app.get('/api/submissions/:id', async (req, res) => {
     });
 
     if (!submission) {
-      return res.status(404).json({ error: 'Submission not found' });
+      return res.status(404).end();
     }
 
     res.json(submission);
   } catch (error) {
     console.error('Error fetching submission:', error);
-    res.status(500).json({ error: 'Failed to fetch submission' });
+    res.status(500).end();
   }
 });
 
@@ -481,7 +481,7 @@ app.delete('/api/submissions/:id', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('Error deleting submission:', error);
-    res.status(500).json({ error: 'Failed to delete submission' });
+    res.status(500).end();
   }
 });
 
