@@ -30,22 +30,66 @@ export function ShiftAssignment() {
       if (id) {
         const formData = await getForm(id);
         setForm(formData || null);
-        
+
         if (formData) {
           // Fetch submissions for this form
           await fetchSubmissionsByForm(formData.id);
           const subs = getSubmissionsByForm(formData.id);
           setSubmissions(subs);
-          
-          // Get or create assignment
-          let assignmentData = getAssignmentByForm(formData.id);
-          if (!assignmentData) {
-            assignmentData = createAssignment(formData.id);
+
+          // Try to get existing assignment from server first
+          try {
+            const response = await fetch(`/api/forms/${formData.id}/assignment`);
+            if (response.ok) {
+              const existingAssignment = await response.json();
+              // Convert server assignment to local format
+              const localAssignment = {
+                id: existingAssignment.id,
+                formId: existingAssignment.formId,
+                assignments: existingAssignment.assignments,
+                status: existingAssignment.status,
+                createdAt: new Date(existingAssignment.createdAt),
+                updatedAt: new Date(existingAssignment.updatedAt),
+                publishedAt: existingAssignment.publishedAt ? new Date(existingAssignment.publishedAt) : undefined
+              };
+              setAssignment(localAssignment);
+
+              // Initialize matrix from existing assignment data
+              if (existingAssignment.assignments.length > 0) {
+                const matrix: Record<string, Record<string, boolean>> = {};
+                subs.forEach(submission => {
+                  matrix[submission.staffName] = {};
+                  formData.timeSlots.forEach(slot => {
+                    const isAssigned = existingAssignment.assignments.some((assignment: any) =>
+                      assignment.slotId === slot.id &&
+                      assignment.staffAssignments.some((staff: any) => staff.staffName === submission.staffName)
+                    );
+                    matrix[submission.staffName][slot.id] = isAssigned;
+                  });
+                });
+                setShiftMatrix(matrix);
+              } else {
+                initializeShiftMatrix(formData, subs);
+              }
+            } else {
+              // Create new assignment if not found
+              let assignmentData = getAssignmentByForm(formData.id);
+              if (!assignmentData) {
+                assignmentData = createAssignment(formData.id);
+              }
+              setAssignment(assignmentData);
+              initializeShiftMatrix(formData, subs);
+            }
+          } catch (error) {
+            console.error('Error fetching assignment:', error);
+            // Fallback to local assignment
+            let assignmentData = getAssignmentByForm(formData.id);
+            if (!assignmentData) {
+              assignmentData = createAssignment(formData.id);
+            }
+            setAssignment(assignmentData);
+            initializeShiftMatrix(formData, subs);
           }
-          setAssignment(assignmentData);
-          
-          // Initialize shift matrix
-          initializeShiftMatrix(formData, subs);
         }
       }
     };
@@ -82,24 +126,114 @@ export function ShiftAssignment() {
     }));
   };
 
-  const handleConfirmShift = () => {
-    if (assignment) {
-      confirmAssignment(assignment.id);
-      setAssignment({ ...assignment, status: 'confirmed' });
+  const handleConfirmShift = async () => {
+    if (assignment && form) {
+      try {
+        // マトリックスデータをAPIに送信可能な形式に変換
+        const assignmentData = Object.entries(shiftMatrix)
+          .flatMap(([staffName, slots]) =>
+            Object.entries(slots)
+              .filter(([, isSelected]) => isSelected)
+              .map(([slotId]) => ({
+                slotId,
+                staffAssignments: [{
+                  staffId: staffName, // スタッフ名をIDとして使用
+                  staffName,
+                  isConfirmed: true
+                }]
+              }))
+          );
+
+        // サーバーにシフト確定データを送信
+        const response = await fetch('/api/assignments', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            formId: form.id,
+            assignments: assignmentData,
+            status: 'confirmed'
+          }),
+        });
+
+        if (response.ok) {
+          const savedAssignment = await response.json();
+          // サーバーから返されたassignmentのIDでローカル状態を更新
+          const updatedAssignment = {
+            ...assignment,
+            id: savedAssignment.id, // 重要: サーバーのIDを使用
+            status: 'confirmed' as const
+          };
+          confirmAssignment(assignment.id);
+          setAssignment(updatedAssignment);
+        } else {
+          throw new Error('Failed to save assignment');
+        }
+      } catch (error) {
+        console.error('Error confirming shift:', error);
+        alert('シフト確定に失敗しました。もう一度お試しください。');
+      }
     }
   };
 
-  const handleUnpublishShift = () => {
+  const handleUnpublishShift = async () => {
     if (assignment && confirm('シフトの公開を取り消しますか？スタッフは最新のシフトを見ることができなくなります。')) {
-      unpublishAssignment(assignment.id);
-      setAssignment({ ...assignment, status: 'draft', publishedAt: undefined });
+      try {
+        const response = await fetch(`/api/assignments/${assignment.id}/status`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: 'confirmed' }),
+        });
+
+        if (response.ok) {
+          const updatedAssignment = await response.json();
+          unpublishAssignment(assignment.id);
+          setAssignment({
+            ...assignment,
+            id: updatedAssignment.id, // 最新のIDを保持
+            status: 'confirmed' as const,
+            publishedAt: undefined
+          });
+        } else {
+          throw new Error('Failed to unpublish assignment');
+        }
+      } catch (error) {
+        console.error('Error unpublishing shift:', error);
+        alert('公開取消に失敗しました。もう一度お試しください。');
+      }
     }
   };
 
-  const handlePublishShift = () => {
+  const handlePublishShift = async () => {
     if (assignment) {
-      publishAssignment(assignment.id);
-      setAssignment({ ...assignment, status: 'published', publishedAt: new Date() });
+      try {
+        const response = await fetch(`/api/assignments/${assignment.id}/status`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: 'published' }),
+        });
+
+        if (response.ok) {
+          const updatedAssignment = await response.json();
+          publishAssignment(assignment.id);
+          setAssignment({
+            ...assignment,
+            id: updatedAssignment.id, // 最新のIDを保持
+            status: 'published' as const,
+            publishedAt: new Date(updatedAssignment.publishedAt)
+          });
+        } else {
+          throw new Error('Failed to publish assignment');
+        }
+      } catch (error) {
+        console.error('Error publishing shift:', error);
+        alert('公開に失敗しました。もう一度お試しください。');
+      }
     }
   };
 

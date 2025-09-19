@@ -85,8 +85,8 @@ app.post('/api/signin', async (req, res) => {
     res.cookie('session', session.id, {
       maxAge: 1 * 24 * 60 * 60 * 1000,
       httpOnly: true,
-      secure: true,
-      sameSite: 'none'
+      secure: false,
+      sameSite: 'lax'
     });
     res.json(session);
   } catch (error) {
@@ -482,6 +482,176 @@ app.delete('/api/submissions/:id', async (req, res) => {
   } catch (error) {
     console.error('Error deleting submission:', error);
     res.status(500).json({ error: 'Failed to delete submission' });
+  }
+});
+
+// Create or update shift assignment
+app.post('/api/assignments', async (req, res) => {
+  try {
+    const { formId, assignments, status } = req.body;
+
+    // Check if assignment already exists for this form
+    let existingAssignment = await prisma.shiftAssignment.findFirst({
+      where: { formId }
+    });
+
+    if (existingAssignment) {
+      // Delete existing assignments and recreate
+      await prisma.assignment.deleteMany({
+        where: { assignmentId: existingAssignment.id }
+      });
+
+      const updatedAssignment = await prisma.shiftAssignment.update({
+        where: { id: existingAssignment.id },
+        data: {
+          status: status || 'confirmed',
+          updatedAt: new Date(),
+          assignments: {
+            create: assignments.map(assignment => ({
+              slotId: assignment.slotId,
+              staffAssignments: {
+                create: assignment.staffAssignments.map(staff => ({
+                  staffId: staff.staffId,
+                  staffName: staff.staffName,
+                  role: staff.role || null,
+                  isConfirmed: staff.isConfirmed || false
+                }))
+              }
+            }))
+          }
+        },
+        include: {
+          assignments: {
+            include: {
+              staffAssignments: true
+            }
+          }
+        }
+      });
+
+      res.json(updatedAssignment);
+    } else {
+      // Create new assignment
+      const newAssignment = await prisma.shiftAssignment.create({
+        data: {
+          formId,
+          status: status || 'confirmed',
+          assignments: {
+            create: assignments.map(assignment => ({
+              slotId: assignment.slotId,
+              staffAssignments: {
+                create: assignment.staffAssignments.map(staff => ({
+                  staffId: staff.staffId,
+                  staffName: staff.staffName,
+                  role: staff.role || null,
+                  isConfirmed: staff.isConfirmed || false
+                }))
+              }
+            }))
+          }
+        },
+        include: {
+          assignments: {
+            include: {
+              staffAssignments: true
+            }
+          }
+        }
+      });
+
+      res.json(newAssignment);
+    }
+  } catch (error) {
+    console.error('Error creating/updating assignment:', error);
+    res.status(500).json({ error: 'Failed to create/update assignment' });
+  }
+});
+
+// Get assignment by form ID
+app.get('/api/forms/:formId/assignment', async (req, res) => {
+  try {
+    const { formId } = req.params;
+
+    const assignment = await prisma.shiftAssignment.findFirst({
+      where: { formId },
+      include: {
+        assignments: {
+          include: {
+            staffAssignments: true
+          }
+        }
+      }
+    });
+
+    if (!assignment) {
+      return res.status(404).json({ error: 'Assignment not found' });
+    }
+
+    res.json(assignment);
+  } catch (error) {
+    console.error('Error fetching assignment:', error);
+    res.status(500).json({ error: 'Failed to fetch assignment' });
+  }
+});
+
+// Get assignment by ID
+app.get('/api/assignments/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const assignment = await prisma.shiftAssignment.findUnique({
+      where: { id },
+      include: {
+        form: {
+          include: {
+            timeSlots: true
+          }
+        },
+        assignments: {
+          include: {
+            staffAssignments: true
+          }
+        }
+      }
+    });
+
+    if (!assignment) {
+      return res.status(404).json({ error: 'Assignment not found' });
+    }
+
+    res.json(assignment);
+  } catch (error) {
+    console.error('Error fetching assignment:', error);
+    res.status(500).json({ error: 'Failed to fetch assignment' });
+  }
+});
+
+// Update assignment status
+app.patch('/api/assignments/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const updatedAssignment = await prisma.shiftAssignment.update({
+      where: { id },
+      data: {
+        status,
+        publishedAt: status === 'published' ? new Date() : undefined,
+        updatedAt: new Date()
+      },
+      include: {
+        assignments: {
+          include: {
+            staffAssignments: true
+          }
+        }
+      }
+    });
+
+    res.json(updatedAssignment);
+  } catch (error) {
+    console.error('Error updating assignment status:', error);
+    res.status(500).json({ error: 'Failed to update assignment status' });
   }
 });
 
