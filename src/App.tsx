@@ -27,9 +27,9 @@ function App() {
           <Route path="forms/:id/assignment" element={<PrivateRoute><ShiftAssignment /></PrivateRoute>} />
           <Route path="templates" element={<PrivateRoute><Templates /></PrivateRoute>} />
           <Route path="settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
-          <Route path="signup" element={<AuthRoute><Signup /></AuthRoute>} />
-          <Route path="signin" element={<AuthRoute><Signin /></AuthRoute>} />
         </Route>
+        <Route path="signup" element={<AuthRoute><Signup /></AuthRoute>} />
+        <Route path="signin" element={<AuthRoute><Signin /></AuthRoute>} />
         <Route path="/submit/:formId" element={<SubmitForm />} />
         <Route path="/shift/:assignmentId" element={<ViewShift />} />
       </Routes>

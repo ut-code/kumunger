@@ -26,17 +26,26 @@ app.use(express.json({ limit: '10mb' }));
 // Serve static files from the dist directory (production build)
 app.use(express.static(path.join(__dirname, '../dist')));
 
-app.post('/api/auth', async (req, res) => {
+async function getUserId(sessionId) {
   try {
     const session = await prisma.session.findUnique({
       where: {
-        id: req.cookies.session ?? ''
+        id: sessionId ?? ''
       }
     });
-    if (session) {
+    return session?.userId;
+  } catch (error) {
+    return null;
+  }
+}
+
+app.post('/api/auth', async (req, res) => {
+  try {
+    const userId = await getUserId(req.cookies.session);
+    if (userId) {
       const user = await prisma.user.findUnique({
         where: {
-          id: session.userId
+          id: userId
         }
       }); res.status(200).json({
         username: user.username
@@ -59,11 +68,11 @@ app.post('/api/signin', async (req, res) => {
     });
 
     if (!account) {
-      res.status(401).json({ error: 'No user' });
+      res.status(401).json({ error: 'Unauthorized' });
       return;
     }
     if (account.password != req.body.password) {
-      res.status(401).json({ error: 'Wrong password' });
+      res.status(401).json({ error: 'Unauthorized' });
       return;
     }
 
