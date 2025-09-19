@@ -1,21 +1,21 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import type { 
-  ShiftForm, 
-  TimeSlot, 
-  Question, 
-  Role, 
-  Template 
+import type {
+  ShiftForm,
+  TimeSlot,
+  Question,
+  Role,
+  Template
 } from '../types';
 
 interface FormStore {
   forms: ShiftForm[];
   templates: Template[];
   currentForm: ShiftForm | null;
-  
+
   // API base URL
   apiUrl: string;
-  
+
   // Form CRUD operations
   fetchForms: () => Promise<void>;
   createForm: (title: string, description?: string) => Promise<ShiftForm>;
@@ -23,30 +23,30 @@ interface FormStore {
   deleteForm: (id: string) => Promise<void>;
   getForm: (id: string) => Promise<ShiftForm | undefined>;
   duplicateForm: (id: string) => Promise<void>;
-  
+
   // Form components management
   addTimeSlot: (formId: string, slot: Omit<TimeSlot, 'id'>) => Promise<void>;
   updateTimeSlot: (formId: string, slotId: string, updates: Partial<TimeSlot>) => Promise<void>;
   deleteTimeSlot: (formId: string, slotId: string) => Promise<void>;
-  
+
   addQuestion: (formId: string, question: Omit<Question, 'id'>) => Promise<void>;
   updateQuestion: (formId: string, questionId: string, updates: Partial<Question>) => Promise<void>;
   deleteQuestion: (formId: string, questionId: string) => Promise<void>;
-  
+
   addRole: (formId: string, role: Omit<Role, 'id'>) => Promise<void>;
   updateRole: (formId: string, roleId: string, updates: Partial<Role>) => Promise<void>;
   deleteRole: (formId: string, roleId: string) => Promise<void>;
-  
+
   // Templates
   createTemplate: (formId: string, name: string, description?: string) => void;
   createEmptyTemplate: (name: string, description?: string) => void;
   applyTemplate: (formId: string, templateId: string) => void;
   deleteTemplate: (templateId: string) => void;
-  
+
   // Share & QR Code
   generateShareUrl: (formId: string) => Promise<string>;
   generateQRCode: (formId: string) => Promise<string>;
-  
+
   // Utility
   setCurrentForm: (form: ShiftForm | null) => void;
 }
@@ -61,7 +61,9 @@ export const useFormStore = create<FormStore>((set, get) => ({
 
   fetchForms: async () => {
     try {
-      const response = await fetch(`${API_URL}/api/forms`);
+      const response = await fetch(`${API_URL}/api/forms`, {
+        credentials: 'include'
+      });
       if (!response.ok) throw new Error('Failed to fetch forms');
       const forms = await response.json() as ShiftForm[];
       set({ forms });
@@ -87,11 +89,12 @@ export const useFormStore = create<FormStore>((set, get) => ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newForm),
+        credentials: 'include'
       });
 
       if (!response.ok) throw new Error('Failed to create form');
       const createdForm = await response.json() as ShiftForm;
-      
+
       set((state) => ({
         forms: [createdForm, ...state.forms],
         currentForm: createdForm,
@@ -110,6 +113,7 @@ export const useFormStore = create<FormStore>((set, get) => ({
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
+        credentials: 'include'
       });
 
       if (!response.ok) throw new Error('Failed to update form');
@@ -131,6 +135,7 @@ export const useFormStore = create<FormStore>((set, get) => ({
     try {
       const response = await fetch(`${API_URL}/api/forms/${id}`, {
         method: 'DELETE',
+        credentials: 'include'
       });
 
       if (!response.ok) throw new Error('Failed to delete form');
@@ -152,14 +157,16 @@ export const useFormStore = create<FormStore>((set, get) => ({
       if (localForm) return localForm;
 
       // If not found locally, fetch from API
-      const response = await fetch(`${API_URL}/api/forms/${id}`);
+      const response = await fetch(`${API_URL}/api/forms/${id}`, {
+        credentials: 'include'
+      });
       if (!response.ok) {
         if (response.status === 404) return undefined;
         throw new Error('Failed to fetch form');
       }
-      
+
       const form = await response.json() as ShiftForm;
-      
+
       // Update local state with fetched form
       set((state) => {
         const exists = state.forms.some(f => f.id === id);
@@ -168,7 +175,7 @@ export const useFormStore = create<FormStore>((set, get) => ({
         }
         return state;
       });
-      
+
       return form;
     } catch (error) {
       console.error('Error getting form:', error);
@@ -200,6 +207,7 @@ export const useFormStore = create<FormStore>((set, get) => ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(duplicatedForm),
+        credentials: 'include'
       });
 
       if (!response.ok) throw new Error('Failed to duplicate form');
@@ -409,6 +417,7 @@ export const useFormStore = create<FormStore>((set, get) => ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ baseUrl }),
+        credentials: 'include'
       });
 
       if (!response.ok) throw new Error('Failed to generate share URL');
@@ -439,6 +448,7 @@ export const useFormStore = create<FormStore>((set, get) => ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ qrCode }),
+        credentials: 'include'
       });
 
       if (!response.ok) throw new Error('Failed to save QR code');

@@ -65,7 +65,8 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
         body: JSON.stringify({
           username: username,
           password: password
-        })
+        }),
+        credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to Sign up');
       //const account = await response.json();
