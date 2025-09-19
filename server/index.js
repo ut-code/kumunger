@@ -3,7 +3,6 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
-import { EqualApproximately } from 'lucide-react';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -136,9 +135,16 @@ app.post('/api/forms', async (req, res) => {
       isActive
     } = req.body;
 
+    const userId = await getUserId(req.cookies.session);
+    if (!userId) {
+      res.status(401).end();
+      return;
+    }
+
     const form = await prisma.shiftForm.create({
       data: {
         title,
+        userId,
         description,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
@@ -187,7 +193,16 @@ app.post('/api/forms', async (req, res) => {
 // Get all forms
 app.get('/api/forms', async (req, res) => {
   try {
+    const userId = await getUserId(req.cookies.session);
+    if (!userId) {
+      res.status(401).end();
+      return;
+    }
+
     const forms = await prisma.shiftForm.findMany({
+      where: {
+        userId
+      },
       include: {
         timeSlots: true,
         additionalQuestions: true,
