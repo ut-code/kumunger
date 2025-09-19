@@ -1,67 +1,85 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { useAssignmentStore } from '../store/assignmentStore';
-import { useFormStore } from '../store/formStore';
-import { useSubmissionStore } from '../store/submissionStore';
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import type { ShiftForm, ShiftAssignment } from '../types';
+import type { ShiftForm } from '../types';
+
+interface ShiftAssignmentData {
+  id: string;
+  formId: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt?: string;
+  form: ShiftForm;
+  assignments: {
+    id: string;
+    slotId: string;
+    staffAssignments: {
+      id: string;
+      staffId: string;
+      staffName: string;
+      role?: string;
+      isConfirmed: boolean;
+    }[];
+  }[];
+}
 
 export function ViewShift() {
   const { assignmentId } = useParams<{ assignmentId: string }>();
-  const { getAssignment } = useAssignmentStore();
-  const { getForm } = useFormStore();
-  const { getSubmissionsByForm, fetchSubmissionsByForm } = useSubmissionStore();
-  
-  const [assignment, setAssignment] = useState<ShiftAssignment | null>(null);
-  const [form, setForm] = useState<ShiftForm | null>(null);
-  const [finalShifts, setFinalShifts] = useState<Record<string, Record<string, boolean>>>({});
+
+  const [assignment, setAssignment] = useState<ShiftAssignmentData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
       if (assignmentId) {
-        const assignmentData = getAssignment(assignmentId);
-        setAssignment(assignmentData || null);
-        
-        if (assignmentData) {
-          const formData = await getForm(assignmentData.formId);
-          setForm(formData || null);
-          
-          if (formData) {
-            await fetchSubmissionsByForm(formData.id);
-            const submissions = getSubmissionsByForm(formData.id);
-            
-            // Create final shift matrix based on assignment data
-            // For now, we'll show all available slots as assigned
-            // In a real implementation, this would come from the confirmed assignment
-            const matrix: Record<string, Record<string, boolean>> = {};
-            submissions.forEach(submission => {
-              matrix[submission.staffName] = {};
-              formData.timeSlots.forEach(slot => {
-                const availableSlot = submission.availableSlots.find(
-                  avail => avail.slotId === slot.id && avail.isAvailable
-                );
-                matrix[submission.staffName][slot.id] = !!availableSlot;
-              });
-            });
-            setFinalShifts(matrix);
+        try {
+          setLoading(true);
+          const response = await fetch(`/api/assignments/${assignmentId}`);
+
+          if (response.ok) {
+            const assignmentData = await response.json();
+            setAssignment(assignmentData);
+          } else if (response.status === 404) {
+            setError('シフトが見つかりません');
+          } else {
+            setError('シフトの読み込みに失敗しました');
           }
+        } catch (error) {
+          console.error('Error loading assignment:', error);
+          setError('シフトの読み込みに失敗しました');
+        } finally {
+          setLoading(false);
         }
       }
     };
     loadData();
-  }, [assignmentId, getAssignment, getForm, fetchSubmissionsByForm, getSubmissionsByForm]);
+  }, [assignmentId]);
 
-  if (!assignment || !form) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900">シフトが見つかりません</h2>
+          <h2 className="text-2xl font-bold text-gray-900">読み込み中...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !assignment) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900">{error || 'シフトが見つかりません'}</h2>
           <p className="mt-2 text-gray-600">URLを確認してください</p>
         </div>
       </div>
     );
   }
+
+  const form = assignment.form;
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -130,28 +148,42 @@ export function ViewShift() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {Object.entries(finalShifts).map(([staffName, shifts]) => (
-                        <tr key={staffName}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r">
-                            {staffName}
-                          </td>
-                          {form.timeSlots.map((slot) => {
-                            const isAssigned = shifts[slot.id] || false;
-                            
-                            return (
-                              <td key={slot.id} className="px-3 py-4 text-center border-l">
-                                <div className={`w-16 h-10 rounded flex items-center justify-center text-xs font-medium mx-auto ${
-                                  isAssigned
-                                    ? 'bg-green-100 text-green-800 border border-green-200'
-                                    : 'bg-gray-50 text-gray-400'
-                                }`}>
-                                  {isAssigned ? '✓' : '-'}
-                                </div>
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
+                      {(() => {
+                        // スタッフ名のリストを作成
+                        const allStaff = new Set<string>();
+                        assignment.assignments.forEach(assignment => {
+                          assignment.staffAssignments.forEach(staff => {
+                            allStaff.add(staff.staffName);
+                          });
+                        });
+
+                        return Array.from(allStaff).map(staffName => (
+                          <tr key={staffName}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r">
+                              {staffName}
+                            </td>
+                            {form.timeSlots.map((slot) => {
+                              // このスタッフがこのスロットに割り当てられているかチェック
+                              const isAssigned = assignment.assignments.some(assignment =>
+                                assignment.slotId === slot.id &&
+                                assignment.staffAssignments.some(staff => staff.staffName === staffName)
+                              );
+
+                              return (
+                                <td key={slot.id} className="px-3 py-4 text-center border-l">
+                                  <div className={`w-16 h-10 rounded flex items-center justify-center text-xs font-medium mx-auto ${
+                                    isAssigned
+                                      ? 'bg-green-100 text-green-800 border border-green-200'
+                                      : 'bg-gray-50 text-gray-400'
+                                  }`}>
+                                    {isAssigned ? '✓' : '-'}
+                                  </div>
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ));
+                      })()}
                     </tbody>
                   </table>
                 </div>
