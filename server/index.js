@@ -121,6 +121,16 @@ app.post('/api/signup', async (req, res) => {
   }
 });
 
+app.post('/api/signout', async (req, res) => {
+  res.cookie('session', '', {
+    maxAge: 0,
+    httpOnly: true,
+    secure: false,
+    sameSite: 'lax'
+  });
+  res.status(200).end();
+});
+
 // Create new form
 app.post('/api/forms', async (req, res) => {
   try {

@@ -10,6 +10,7 @@ interface AccountStore {
   authorize: () => Promise<void>;
   requestSignin: (username: string, password: string) => Promise<Number>;
   requestSignup: (username: string, password: string) => Promise<boolean>;
+  requestSignout: () => Promise<void>;
 }
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -24,8 +25,8 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
       method: 'POST',
       credentials: 'include'
     });
-    const json = await response.json();
     if (response.ok) {
+      const json = await response.json();
       set({
         username: json.username,
         authenticated: true
@@ -69,7 +70,6 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
         credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to Sign up');
-      //const account = await response.json();
 
       set(() => ({
         username: username
@@ -79,6 +79,21 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
     } catch (error) {
       console.log('Failed to Sign up: ', error);
       return false;
+    }
+  },
+  requestSignout: async () => {
+    try {
+      await fetch(`${API_URL}/api/signout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      set({
+        username: '',
+        authenticated: false
+      });
+    }
+    catch (error) {
+      console.log('Failed to Sign out: ', error);
     }
   }
 }));
