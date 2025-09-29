@@ -137,6 +137,11 @@ app.post('/api/signup', async (req, res) => {
 });
 
 app.post('/api/signout', async (req, res) => {
+  await prisma.session.delete({
+    where: {
+      id: req.cookies.session
+    }
+  });
   res.cookie('session', '', {
     maxAge: 0,
     httpOnly: true,
