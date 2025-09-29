@@ -3,6 +3,7 @@ import { create } from 'zustand';
 interface AccountStore {
   username: string;
   authenticated: boolean;
+  pending: boolean;
 
   // API base URL
   apiUrl: string;
@@ -15,9 +16,10 @@ interface AccountStore {
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:3001');
 
-export const useAccountStore = create<AccountStore>((set, get) => ({
+export const useAccountStore = create<AccountStore>((set) => ({
   username: '',
   authenticated: false,
+  pending: true,
   apiUrl: API_URL,
 
   authorize: async () => {
@@ -29,8 +31,14 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
     if (response.ok) {
       set({
         username: json.username,
-        authenticated: true
+        authenticated: true,
+        pending: false
       });
+    }
+    else {
+      set({
+        pending: false
+      })
     }
   },
   requestSignin: async (username, password) => {
