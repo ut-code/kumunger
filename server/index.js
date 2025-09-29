@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createHash, randomBytes } from 'node:crypto';
 
 dotenv.config();
 
@@ -36,6 +37,10 @@ async function getUserId(sessionId) {
   } catch (error) {
     return null;
   }
+}
+
+function getHash(password, salt) {
+  return createHash('sha256').update(password + salt + process.env.PEPPER).digest('hex');
 }
 
 app.post('/api/auth', async (req, res) => {
@@ -78,7 +83,7 @@ app.post('/api/signin', async (req, res) => {
       res.status(401).end();
       return;
     }
-    if (account.password != req.body.password) {
+    if (account.hash != getHash(req.body.password, account.salt)) {
       res.status(401).end();
       return;
     }
@@ -109,13 +114,15 @@ app.post('/api/signin', async (req, res) => {
 // Accept sign up
 app.post('/api/signup', async (req, res) => {
   try {
-    const account = await prisma.user.create({
+    const salt = randomBytes(32).toString('hex');
+    await prisma.user.create({
       data: {
         username: req.body.username,
-        password: req.body.password
+        hash: getHash(req.body.password, salt),
+        salt
       }
     });
-    res.json(account);
+    res.status(200).end();
   } catch (error) {
     if (error instanceof PrismaClientKnownRequestError) {
       switch (error.code) {
