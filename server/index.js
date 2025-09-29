@@ -46,7 +46,15 @@ app.post('/api/auth', async (req, res) => {
         where: {
           id: userId
         }
-      }); res.status(200).json({
+      });
+
+      res.cookie('session', req.cookies.session, {
+        maxAge: 1 * 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax'
+      });
+      res.status(200).json({
         username: user.username
       });
     }
