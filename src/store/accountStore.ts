@@ -23,22 +23,29 @@ export const useAccountStore = create<AccountStore>((set) => ({
   apiUrl: API_URL,
 
   authorize: async () => {
-    const response = await fetch(`${API_URL}/api/auth`, {
-      method: 'POST',
-      credentials: 'include'
-    });
-    const json = await response.json();
-    if (response.ok) {
+    try {
+      const response = await fetch(`${API_URL}/api/auth`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      const json = await response.json();
+      if (response.ok) {
+        set({
+          username: json.username,
+          authenticated: true,
+          pending: false
+        });
+      }
+      else {
+        set({
+          pending: false
+        });
+      }
+    } catch (error) {
+      console.log('Failed to Authorize: ', error);
       set({
-        username: json.username,
-        authenticated: true,
         pending: false
       });
-    }
-    else {
-      set({
-        pending: false
-      })
     }
   },
   requestSignin: async (username, password) => {
