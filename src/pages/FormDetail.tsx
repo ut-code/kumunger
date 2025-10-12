@@ -77,10 +77,10 @@ export function FormDetail() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6 max-w-7xl mx-auto">
       <div className="mb-6">
-        <Link 
-          to="/dashboard" 
+        <Link
+          to="/dashboard"
           className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
@@ -89,14 +89,14 @@ export function FormDetail() {
       </div>
 
       <div className="bg-white shadow rounded-lg">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{form.title}</h1>
+        <div className="px-4 md:px-6 py-4 border-b border-gray-200">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+            <div className="flex-1">
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">{form.title}</h1>
               {form.description && (
                 <p className="mt-2 text-gray-600">{form.description}</p>
               )}
-              <div className="mt-4 flex items-center space-x-6 text-sm text-gray-500">
+              <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-sm text-gray-500">
                 <div className="flex items-center">
                   <Calendar className="w-4 h-4 mr-1" />
                   {format(new Date(form.startDate), 'yyyy年M月d日', { locale: ja })} - 
@@ -126,17 +126,17 @@ export function FormDetail() {
               </div>
             </div>
             
-            <div className="flex space-x-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <button
                 onClick={handleShare}
-                className="px-3 py-2 text-sm border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
+                className="px-3 py-2 text-sm border border-gray-300 rounded text-gray-700 hover:bg-gray-50 whitespace-nowrap"
               >
                 <Share2 className="w-4 h-4 inline mr-1" />
                 共有
               </button>
               <button
                 onClick={handleShowQR}
-                className="px-3 py-2 text-sm border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
+                className="px-3 py-2 text-sm border border-gray-300 rounded text-gray-700 hover:bg-gray-50 whitespace-nowrap"
               >
                 <QrCode className="w-4 h-4 inline mr-1" />
                 QRコード
@@ -152,11 +152,11 @@ export function FormDetail() {
           </div>
         </div>
 
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="p-4 md:p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             <Link
               to={`/forms/${form.id}/submissions`}
-              className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-primary-500 transition-colors"
+              className="bg-white border-2 border-gray-200 rounded-lg p-4 md:p-6 hover:border-primary-500 transition-colors"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -170,7 +170,7 @@ export function FormDetail() {
 
             <Link
               to={`/forms/${form.id}/assignment`}
-              className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-primary-500 transition-colors"
+              className="bg-white border-2 border-gray-200 rounded-lg p-4 md:p-6 hover:border-primary-500 transition-colors"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -192,16 +192,16 @@ export function FormDetail() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       日付
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       時間
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       必要人数
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       回答数
                     </th>
                   </tr>
@@ -213,16 +213,16 @@ export function FormDetail() {
                     );
                     return (
                       <tr key={slot.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {format(new Date(slot.date), 'M月d日(E)', { locale: ja })}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {slot.startTime} - {slot.endTime}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {slot.requiredStaff} 人
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm">
                           <span className={`font-medium ${
                             slotSubmissions.length >= slot.requiredStaff
                               ? 'text-green-600'
