@@ -3,6 +3,7 @@ import { create } from 'zustand';
 interface AccountStore {
   username: string;
   authenticated: boolean;
+  pending: boolean;
 
   // API base URL
   apiUrl: string;
@@ -10,25 +11,40 @@ interface AccountStore {
   authorize: () => Promise<void>;
   requestSignin: (username: string, password: string) => Promise<Number>;
   requestSignup: (username: string, password: string) => Promise<boolean>;
+  requestSignout: () => Promise<void>;
 }
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:3001');
 
-export const useAccountStore = create<AccountStore>((set, get) => ({
+export const useAccountStore = create<AccountStore>((set) => ({
   username: '',
   authenticated: false,
+  pending: true,
   apiUrl: API_URL,
 
   authorize: async () => {
-    const response = await fetch(`${API_URL}/api/auth`, {
-      method: 'POST',
-      credentials: 'include'
-    });
-    const json = await response.json();
-    if (response.ok) {
+    try {
+      const response = await fetch(`${API_URL}/api/auth`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      const json = await response.json();
+      if (response.ok) {
+        set({
+          username: json.username,
+          authenticated: true,
+          pending: false
+        });
+      }
+      else {
+        set({
+          pending: false
+        });
+      }
+    } catch (error) {
+      console.log('Failed to Authorize: ', error);
       set({
-        username: json.username,
-        authenticated: true
+        pending: false
       });
     }
   },
@@ -79,6 +95,21 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
     } catch (error) {
       console.log('Failed to Sign up: ', error);
       return false;
+    }
+  },
+  requestSignout: async () => {
+    try {
+      await fetch(`${API_URL}/api/signout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      set({
+        username: '',
+        authenticated: false
+      });
+    }
+    catch (error) {
+      console.log('Failed to Sign out: ', error);
     }
   }
 }));

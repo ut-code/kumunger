@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createHash, randomBytes } from 'node:crypto';
 
 dotenv.config();
 
@@ -38,6 +39,10 @@ async function getUserId(sessionId) {
   }
 }
 
+function getHash(password, salt) {
+  return createHash('sha256').update(password + salt + process.env.PEPPER).digest('hex');
+}
+
 app.post('/api/auth', async (req, res) => {
   try {
     const userId = await getUserId(req.cookies.session);
@@ -46,7 +51,15 @@ app.post('/api/auth', async (req, res) => {
         where: {
           id: userId
         }
-      }); res.status(200).json({
+      });
+
+      res.cookie('session', req.cookies.session, {
+        maxAge: 1 * 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax'
+      });
+      res.status(200).json({
         username: user.username
       });
     }
@@ -70,7 +83,7 @@ app.post('/api/signin', async (req, res) => {
       res.status(401).end();
       return;
     }
-    if (account.password != req.body.password) {
+    if (account.hash != getHash(req.body.password, account.salt)) {
       res.status(401).end();
       return;
     }
@@ -101,13 +114,15 @@ app.post('/api/signin', async (req, res) => {
 // Accept sign up
 app.post('/api/signup', async (req, res) => {
   try {
-    const account = await prisma.user.create({
+    const salt = randomBytes(32).toString('hex');
+    await prisma.user.create({
       data: {
         username: req.body.username,
-        password: req.body.password
+        hash: getHash(req.body.password, salt),
+        salt
       }
     });
-    res.json(account);
+    res.status(200).end();
   } catch (error) {
     if (error instanceof PrismaClientKnownRequestError) {
       switch (error.code) {
@@ -119,6 +134,21 @@ app.post('/api/signup', async (req, res) => {
     console.error('Error Accepting Sign up:', error);
     res.status(500).end();
   }
+});
+
+app.post('/api/signout', async (req, res) => {
+  await prisma.session.delete({
+    where: {
+      id: req.cookies.session
+    }
+  });
+  res.cookie('session', '', {
+    maxAge: 0,
+    httpOnly: true,
+    secure: false,
+    sameSite: 'lax'
+  });
+  res.status(200).end();
 });
 
 // Create new form
