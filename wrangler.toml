@@ -1,12 +1,5 @@
 name = "kumunger"
 compatibility_date = "2025-10-12"
 
-pages_build_output_dir = "dist"
-
-# Environment variables for production
-[env.production]
-# Add your production environment variables here
-
-# Environment variables for preview
-[env.preview]
-# Add your preview environment variables here
+[assets]
+directory = "./dist"
