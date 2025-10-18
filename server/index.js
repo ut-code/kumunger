@@ -4,14 +4,9 @@ import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { createHash, randomBytes } from 'node:crypto';
 
 dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 const prisma = new PrismaClient();
@@ -23,8 +18,6 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
-// Serve static files from the dist directory (production build)
-app.use(express.static(path.join(__dirname, '../dist')));
 
 async function getUserId(sessionId) {
   try {
@@ -700,9 +693,9 @@ app.patch('/api/assignments/:id/status', async (req, res) => {
   }
 });
 
-// Catch-all handler: send back React's index.html file for any non-API routes
-app.get(/^(?!\/api).*/, (req, res) => {
-  res.sendFile(path.join(__dirname, '../dist/index.html'));
+// Health check endpoint
+app.get('/', (_req, res) => {
+  res.json({ status: 'ok', message: 'Kumunger API Server' });
 });
 
 app.listen(PORT, () => {
