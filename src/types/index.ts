@@ -56,7 +56,7 @@ export interface ShiftSubmission {
 export interface AvailableSlot {
   slotId: string;
   isAvailable: boolean;
-  preferredRole?: string;
+  preferredRoles?: string[];
   notes?: string;
 }
 

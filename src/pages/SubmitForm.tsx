@@ -34,7 +34,7 @@ export function SubmitForm() {
             initialAvailability[slot.id] = {
               slotId: slot.id,
               isAvailable: false,
-              preferredRole: '',
+              preferredRoles: [],
               notes: '',
             };
           });
@@ -95,16 +95,6 @@ export function SubmitForm() {
       [slotId]: {
         ...prev[slotId],
         isAvailable: !prev[slotId].isAvailable,
-      },
-    }));
-  };
-
-  const updateSlotRole = (slotId: string, role: string) => {
-    setAvailability(prev => ({
-      ...prev,
-      [slotId]: {
-        ...prev[slotId],
-        preferredRole: role,
       },
     }));
   };
@@ -238,18 +228,31 @@ export function SubmitForm() {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           希望役割
                         </label>
-                        <select
-                          value={availability[slot.id]?.preferredRole || ''}
-                          onChange={(e) => updateSlotRole(slot.id, e.target.value)}
-                          className="w-full px-3 py-1 text-sm border border-gray-300 rounded-md"
-                        >
-                          <option value="">選択してください</option>
+                        <div className="space-y-2">
                           {form.requiredRoles.map(role => (
-                            <option key={role.id} value={role.id}>
-                              {role.name}
-                            </option>
+                            <label key={role.id} className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={availability[slot.id]?.preferredRoles?.includes(role.id) || false}
+                                onChange={(e) => {
+                                  const current = availability[slot.id]?.preferredRoles || [];
+                                  const updated = e.target.checked
+                                    ? [...current, role.id]
+                                    : current.filter(id => id !== role.id);
+                                  setAvailability(prev => ({
+                                    ...prev,
+                                    [slot.id]: {
+                                      ...prev[slot.id],
+                                      preferredRoles: updated,
+                                    },
+                                  }));
+                                }}
+                                className="mr-2"
+                              />
+                              <span className="text-sm text-gray-700">{role.name}</span>
+                            </label>
                           ))}
-                        </select>
+                        </div>
                       </div>
                     )}
                     
