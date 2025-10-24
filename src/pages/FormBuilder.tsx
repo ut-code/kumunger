@@ -88,10 +88,29 @@ export function FormBuilder() {
     setQuestions([...questions, newQuestion]);
   };
 
+  function hslToHex(h: number, s: number, l: number) {
+    s /= 100;
+    l /= 100;
+    const a = s * Math.min(l, 1 - l);
+    const f = (n: number) => {
+      const k = (n + h / 30) % 12;
+      const color = l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+      return Math.round(255 * color)
+        .toString(16)
+        .padStart(2, '0');
+    };
+    return `#${f(0)}${f(8)}${f(4)}`;
+  }
+
   const handleAddRole = () => {
+    const hue = (roles.length * 137.5) % 360;
+    const saturation = 70;
+    const lightness = 50;
+
+    const hex = hslToHex(hue, saturation, lightness);
     const newRole: Omit<Role, 'id'> = {
       name: '',
-      color: '#' + Math.floor(Math.random()*16777215).toString(16),
+      color: hex,
     };
     setRoles([...roles, newRole]);
   };
